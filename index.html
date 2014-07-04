@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html ng-app>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Divadia web interface</title>
+
+    <!--   <link rel="stylesheet" href="css/docs.css" />-->
+    <!-- Load the Paper.js library -->
+    <script type="text/javascript" src="js/paper.js"></script>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+</head>
+
+<body>
+
+
+    <div class="row" ng-controller="SimpleController">
+        <div class="col-sm-1">Margin</div>
+        <div class="col-sm-8">
+            <p>
+                We start with an example of a very simple tool that creates an empty path on execution and adds segments to it whenever you click the mouse:
+            </p>
+            <div class="paperscript split">
+                <div class="canvas">
+                    <canvas height="800" width="1000" style="background:#e4e1e1" id="canvas"></canvas>
+                </div>
+            </div>
+            <img class="hidden" id="parzival" src="006.png" alt="The Scream" width="50" height="50">
+        </div>
+        <div class="col-sm-2">
+            test:
+            <input type="text" ng-model="name" />{{name}}
+
+            <p>The pixel you are clicking is:</p>
+            <p id='xyClick'></p>
+
+            <br>
+            <br>
+            <br>
+            <p>The points in the current polygon are:</p>
+            <ul>
+                <li ng-repeat="xy in polygon">
+                    x = {{xy.x}}, y = {{xy.y}}
+                </li>
+            </ul>
+
+            <button type="button" class="btn btn-primary" ng-click="zoomin()">Zoom in</button>
+
+        </div>
+        <div class="col-sm-1">Margin</div>
+    </div>
+
+
+
+    <script type="text/paperscript" canvas="canvas">
+        // Create a raster item using the image tag with id='mona'
+   //     var raster = new Raster('parzival');
+
+         // Move the raster to the center of the view
+   //     raster.position = view.center;
+   //     raster.scale(0.2);
+
+         // Create a new path once, when the script is executed:
+        var path = new Path();
+         // Give the stroke a color
+        path.strokeColor = 'black';
+        var start = new Point(100, 100);
+         // Move to start and draw a line from there
+        path.moveTo(start);
+         // Note the plus operator on Point objects.
+         // PaperScript does that for us, and much more!
+        path.lineTo(start + [100, 150]);
+
+        var lastClick = 0;
+        var pathFinished = false;
+
+        var mypath = new Path.Circle({
+            center: view.center,
+            radius: 30,
+            strokeColor: 'black'
+        });
+
+        mypath.onClick = function (event) {
+            this.fillColor = 'red';
+        }
+
+        mypath.onDoubleClick = function (event) {
+            this.fillColor = 'green';
+        }
+
+ /*       function onMouseDrag(event) {
+
+            console.log('You dragged the mouse!');
+            var vector = event.delta;
+            console.log(vector);
+            project.activeLayer.position = new Point(project.activeLayer.position.x + vector.x,
+                project.activeLayer.position.y + vector.y);
+
+
+        }
+
+*/
+
+
+
+
+        /*
+        function onMouseDown(event) {
+
+            // if the path is finished, then begin a new path
+            if (pathFinished) {
+                myPath = new Path();
+                myPath.strokeColor = 'red';
+                myPath.strokeWidth = 2;
+                $('#xyClick').scope().polygon = [];
+                pathFinished = false;
+            }
+
+            // test if the mousedown is single or double click.
+            var single = true;
+            var d = new Date();
+            var t = d.getTime();
+            if (t - lastClick < 200) {
+                console.log("double")
+                single = false;
+
+            } else {
+                console.log("single");
+            }
+            lastClick = t;
+
+            // calculate the postion of the pixel respect to the top-left corner of the image.
+            console.log(raster.bounds);
+            var xClick = Math.round(event.point.x - raster.bounds.x) * (1 / 0.2);
+            var yClick = Math.round(event.point.y - raster.bounds.y) * (1 / 0.2);
+
+            var pElement = $("#xyClick");
+            var scope = $('#xyClick').scope();
+
+            // update the point information of the polygon
+            if (xClick < 0 || xClick >= 2000 || yClick < 0 || yClick >= 3008) {
+                pElement.html("Out of the image!");
+            } else {
+                myPath.add(event.point);
+                pElement.html("x: " + xClick + ", y: " + yClick);
+                scope.polygon.push({
+                    x: xClick,
+                    y: yClick
+                });
+                scope.$apply();
+            }
+
+            // if double click, then the path is finished.
+            if (!single) {
+                myPath.closed = true;
+                pathFinished = true;
+            }
+        }*/
+    </script>
+
+
+
+
+    <!-- controller  -->
+    <script>
+        function SimpleController($scope) {
+            $scope.polygon = [];
+
+            $scope.zoomin = function () {
+
+                var canvas = document.getElementById('canvas');
+
+
+
+                alert("zoom in!");
+            };
+        }
+    </script>
+
+
+
+
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <!-- Angularjs -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
+</body>
+
+</html>
