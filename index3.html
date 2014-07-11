@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html ng-app>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Divadia web interface</title>
+
+    <!--   <link rel="stylesheet" href="css/docs.css" />-->
+    <!-- Load the Paper.js library -->
+    <script type="text/javascript" src="js/paper.js"></script>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+</head>
+
+<body>
+
+
+    <div class="row" ng-controller="SimpleController">
+        <div class="col-sm-1">Margin</div>
+        <div class="col-sm-8">
+            <p>
+                We start with an example of a very simple tool that creates an empty path on execution and adds segments to it whenever you click the mouse:
+            </p>
+            <div class="paperscript split">
+                <div class="canvas">
+                    <canvas height="800" width="1000" style="background:#e4e1e1" id="canvas"></canvas>
+                </div>
+            </div>
+            <img class="hidden" id="parzival" src="006_original.png" alt="The Scream">
+        </div>
+        <div class="col-sm-2">
+            test:
+            <input type="text" ng-model="name" />{{name}}
+
+            <p>The pixel you are clicking is:</p>
+            <p id='xyClick'></p>
+
+            <br>
+            <br>
+            <br>
+            <p>The points in the current polygon are:</p>
+            <ul>
+                <li ng-repeat="xy in polygon">
+                    x = {{xy.x}}, y = {{xy.y}}
+                </li>
+            </ul>
+
+            <button type="button" class="btn btn-primary" ng-click="zoomin()">Zoom in</button>
+
+        </div>
+        <div class="col-sm-1">Margin</div>
+    </div>
+
+    <!-- controller  -->
+    <script type="text/javascript">
+        function SimpleController($scope) {
+            paper.install(window);
+            $scope.polygon = [];
+            var canvas = document.getElementById('canvas');
+            paper.setup(canvas);
+            var raster = new Raster('parzival');
+            raster.position = view.center;
+            var zoom = 0.2;
+            project.activeLayer.scale(zoom);
+
+            var myPath = new Path();
+            myPath.strokeColor = 'red';
+            myPath.strokeWidth = 2;
+            var lastClick = 0;
+            var pathFinished = false;
+            var pointMouseDown;
+            
+            var img = document.getElementsByTagName("img")[0];
+            var imgWidth = img.width;
+            var imgHeight = img.height;
+
+
+            var tool = new Tool();
+
+            /*       canvas.onmousedown = function (event) {
+                pointMouseDown = event.offset;
+            }*/
+
+
+            // get the position of the pixel which is being clicked.
+            tool.onMouseUp = function (event) {
+
+                //  alert(event.offsetX + "  " + event.offsetY);
+                // if the path is finished, then begin a new path
+                if (pathFinished) {
+                    myPath = new Path();
+                    myPath.strokeColor = 'red';
+                    myPath.strokeWidth = 2;
+                    $scope.polygon = [];
+                    pathFinished = false;
+                }
+
+                // test if the mousedown is single or double click.
+                var single = true;
+                var drag = false;
+                var d = new Date();
+                var t = d.getTime();
+                if (event.delta.length == 0)
+                    drag = false;
+                else
+                    drag = true;
+                if (t - lastClick < 200) {
+                    console.log("double")
+                    single = false;
+
+                } else {
+                    console.log("single");
+                }
+                lastClick = t;
+
+                // calculate the postion of the pixel respect to the top-left corner of the image.
+                //           console.log(raster.bounds.x);
+                //           console.log(event.clientX);
+                // ATTENTION: take care of the event. When I use canvas.onmouseup = function (event) {}, 
+                // I should write in the following way, which is consistent with the next 
+                // canvas.addEventListener("mousewheel", function (e) {}
+                //           var xClick = Math.round(event.offsetX - raster.bounds.x) / zoom;
+                //           var yClick = Math.round(event.offsetY - raster.bounds.y) / zoom;
+
+                var xClick = Math.round((event.point.x - raster.bounds.x) / zoom );
+                var yClick = Math.round((event.point.y - raster.bounds.y) / zoom );
+
+                var pElement = $("#xyClick");
+                //var scope = $('#xyClick').scope();
+
+                // update the point information of the polygon
+                if (xClick < 0 || xClick >= imgWidth || yClick < 0 || yClick >= imgHeight) {
+                    pElement.html("Out of the image!");
+                } else if (!drag) {
+                    myPath.add(event.point);
+                    pElement.html("x: " + xClick + ", y: " + yClick);
+                    $scope.polygon.push({
+                        x: xClick,
+                        y: yClick
+                    });
+                    $scope.$apply();
+                }
+
+                // if double click, then the path is finished.
+                if (!single) {
+                    myPath.closed = true;
+                    pathFinished = true;
+                }
+            }
+
+
+            // pan the image 
+            tool.onMouseDrag = function (event) {
+                console.log('You dragged the mouse!');
+                var vector = event.delta;
+                console.log(vector);
+                project.activeLayer.position = new Point(project.activeLayer.position.x + vector.x,
+                    project.activeLayer.position.y + vector.y);
+            }
+
+
+            // This method is to zoom in/out. After zooming, the pixel under the cursor will move away, so we 
+            // have to move it back to the cursor. This is transformed by a little complicated coordinate 
+            // transformation. See "Coordinate_transformation.pdf".
+            canvas.addEventListener("mousewheel", function (e) {
+
+                //   alert("mousewheel");
+                e.preventDefault();
+                var direction = e.deltaY;
+                var scaleFactor = 1.1;
+
+
+                var xPToImageLast = Math.round(e.offsetX - raster.bounds.x);
+                var yPToImageLast = Math.round(e.offsetY - raster.bounds.y);
+
+                var xPToImageNew;
+                var yPToImageNew;
+
+
+                if (direction < 0) {
+                    project.activeLayer.scale(scaleFactor);
+                    zoom = zoom * scaleFactor;
+                    xPToImageNew = xPToImageLast * scaleFactor;
+                    yPToImageNew = yPToImageLast * scaleFactor;
+                } else {
+                    project.activeLayer.scale(1 / scaleFactor);
+                    zoom = zoom / scaleFactor;
+                    xPToImageNew = xPToImageLast / scaleFactor;
+                    yPToImageNew = yPToImageLast / scaleFactor;
+                }
+
+                var xPToCanvasNew = xPToImageNew + Math.round(raster.bounds.x);
+                var yPToCanvasNew = yPToImageNew + Math.round(raster.bounds.y);
+
+                var offsetXFromPToCursor = Math.round(e.offsetX - xPToCanvasNew);
+                var offsetYFromPToCursor = Math.round(e.offsetY - yPToCanvasNew);
+                //     raster.position += new Point(offsetXFromPToCursor, offsetYFromPToCursor);
+                project.activeLayer.position = new Point(raster.position.x + offsetXFromPToCursor,
+                    raster.position.y + offsetYFromPToCursor);
+            });
+
+
+            $scope.zoomin = function () {
+                //   raster.scale(0.5);
+                project.activeLayer.scale(1.1);
+            };
+        }
+    </script>
+
+
+
+
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <!-- Angularjs -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
+</body>
+
+</html>
