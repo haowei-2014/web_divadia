@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Divadia web interface</title>
+
+    <!--   <link rel="stylesheet" href="css/docs.css" />-->
+    <!-- Load the Paper.js library -->
+    <script type="text/javascript" src="js/paper.js"></script>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+    
+    <!-- Angularjs -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
+    <script src="simpleController.js"></script> 
+</head>
+
+<body>
+<h2 align="center">DIVADIA web service</h2> 
+    
+    <div class="row" ng-controller="simpleController">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-8">
+            <div class="paperscript split">
+                <div class="canvas">
+                    <canvas height="800" width="1100" style="background:#e4e1e1; border:1px solid #0000FF;" id="canvas" ></canvas>
+                </div>
+            </div>
+            <img class="hidden" id="parzival" src="csg562-022.png" alt="The Scream">
+        </div>
+        <div class="col-sm-2">           
+            <button type="button" class="btn btn-primary" ng-click="importImg()">Import Img</button>
+            <button type="button" class="btn btn-primary" ng-click="importGT()">Import GT</button>
+            <button type="button" class="btn btn-primary" ng-click="exportGT()">Export GT</button>
+            <a download="content.txt" ng-href="{{ url }}">download</a>
+            <br>
+            <br>
+            <p>The pixel you are clicking is:</p>
+            <p id='xyClick'></p>
+            <br>
+            <p>The points in the current polygon are:</p>
+            <ul>
+                <li ng-repeat="xy in polygon">
+                    x = {{xy.x}}, y = {{xy.y}}
+                </li>
+            </ul>
+
+        <!--    <button type="button" class="btn btn-primary" ng-click="zoomin()">Zoom in</button>  -->
+            <input id="myInput" type="file" style="visibility:hidden" />
+        <!--    <input type="button" value="Show Dialog" onclick="$('#myInput').click();" /> -->
+        </div>
+        <div class="col-sm-1"></div>
+    </div>
+
+    <!-- controller 
+    <script type="text/javascript">
+        
+    </script> -->
+    
+    
+    <script src="XMLWriter-1.0.0-min.js"></script> 
+
+
+
+
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    
+    
+</body>
+
+</html>

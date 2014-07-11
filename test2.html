@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+    <title>Example 1</title>
+</head>
+
+<body>
+    <h1>Example 1</h1>
+    <script>
+        var
+            buffer = new ArrayBuffer(8) // allocates 8 bytes
+            ,
+            data = new DataView(buffer);
+         // You can write uint8/16/32s and float32/64s to dataviews
+        data.setUint8(0, 0x01);
+        data.setUint16(1, 0x2345);
+        data.setUint32(3, 0x6789ABCD);
+        data.setUint8(7, 0xEF);
+
+        saveAs(new Blob([buffer], {
+            type: "example/binary"
+        }), "data.dat");
+    </script>
+
+    <script src="simpleController.js"></script>
+
+</body>
+
+</html>
+
