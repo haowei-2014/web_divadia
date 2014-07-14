@@ -33,13 +33,16 @@
                     <canvas height="800" width="1100" style="background:#e4e1e1; border:1px solid #0000FF;" id="canvas" ></canvas>
                 </div>
             </div>
+            
             <img class="hidden" id="parzival" src="csg562-022.png" alt="The Scream">
+<!--            <img id="parzival" src="csg562-022.png" alt="The Scream">-->
         </div>
         <div class="col-sm-2">           
             <button type="button" class="btn btn-primary" ng-click="importImg()">Import Img</button>
+            <input id="myImg" type="file" style="visibility:hidden" onchange="angular.element(this).scope().fileNameChanged(event)">
             <button type="button" class="btn btn-primary" ng-click="importGT()">Import GT</button>
             <button type="button" class="btn btn-primary" ng-click="exportGT()">Export GT</button>
-            <a download="content.txt" ng-href="{{ url }}">download</a>
+<!--            <a download="content.txt" ng-href="{{ url }}">download</a>-->
             <br>
             <br>
             <p>The pixel you are clicking is:</p>
@@ -55,6 +58,7 @@
         <!--    <button type="button" class="btn btn-primary" ng-click="zoomin()">Zoom in</button>  -->
             <input id="myInput" type="file" style="visibility:hidden" />
         <!--    <input type="button" value="Show Dialog" onclick="$('#myInput').click();" /> -->
+            <img id="myimage" height="200">
         </div>
         <div class="col-sm-1"></div>
     </div>
@@ -64,13 +68,6 @@
         
     </script> -->
     
-    
-    <script src="XMLWriter-1.0.0-min.js"></script> 
-
-
-
-
-
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->

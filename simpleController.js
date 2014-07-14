@@ -2,45 +2,46 @@ var myApp = angular.module('myApp', []);
 
 myApp.controller('simpleController', function ($scope) {
     paper.install(window);
-    $scope.polygon = [];
-    var canvas = document.getElementById('canvas');
-    paper.setup(canvas);
-    var raster = new Raster('parzival');
-    raster.position = view.center;
-    var zoom = 0.2;
-    project.activeLayer.scale(zoom);
+    init();
 
-    var myPath = new Path();
-    myPath.strokeColor = 'red';
-    myPath.strokeWidth = 2;
-    var lastClick = 0;
-    var pathFinished = false;
-    var pointMouseDown;
-
-    var img = document.getElementsByTagName("img")[0];
-    var imgWidth = img.width;
-    var imgHeight = img.height;
-
-    var xw;
-
-    //   var content = 'file content';
-    var content = xw;
-    var blob = new Blob([content], {
-        type: 'text/plain'
-    });
-    $scope.url = (window.URL || window.webkitURL).createObjectURL(blob);
+    function init() {
+        $scope.polygon = [];
+        canvas = document.getElementById('canvas');
+        paper.setup(canvas);
+        raster = new Raster('parzival');
+        raster.position = view.center;
+        zoom = 0.2;
+        project.activeLayer.scale(zoom);
+        myPath = new Path();
+        myPath.strokeColor = 'red';
+        myPath.strokeWidth = 2;
+        lastClick = 0;
+        pathFinished = false;
+        tool = new Tool();
+        //        initDim();
+        img = document.getElementById("parzival");
+        imgWidth = img.width;
+        imgHeight = img.height;
+        alert(imgWidth + " , " + imgHeight);
+    }
 
 
-    var tool = new Tool();
 
-    /*       canvas.onmousedown = function (event) {
-                pointMouseDown = event.offset;
-            }*/
+
+
+    //    view.onFrame = function (event) {
+    //        if (imgChanged) {
+    //            imgChanged = false;
+    //            img = document.getElementById("parzival");
+    //            imgWidth = img.width;
+    //            imgHeight = img.height;
+    //            alert(imgWidth + " , " + imgHeight);
+    //        }
+    //    }
 
 
     // get the position of the pixel which is being clicked.
     tool.onMouseUp = function (event) {
-
         //  alert(event.offsetX + "  " + event.offsetY);
         // if the path is finished, then begin a new path
         if (pathFinished) {
@@ -101,7 +102,7 @@ myApp.controller('simpleController', function ($scope) {
             myPath.closed = true;
             pathFinished = true;
             $scope.polygon.pop(); // remove the last element of the polygon, because it was added twice,
-                                // due to the two mouseup.
+            // due to the two mouseup.
             updateDOM();
         }
         $scope.$apply();
@@ -304,12 +305,62 @@ myApp.controller('simpleController', function ($scope) {
         }
         downloadLink.click();
     }
-    
+
     $scope.importImg = function () {
-        alert("import image.");
+        /*alert("change image");
+        document.getElementById("parzival").src = "276_original.png";
+        var ni = new Image();
+        ni.onload = function () {
+            imgWidthTmp = ni.width;
+            imgHeightTmp = ni.height;
+            alert(imgWidthTmp);
+            imgWidth = imgWidthTmp;
+            imgHeight = imgHeightTmp;
+        }
+        ni.src = document.getElementById("parzival").src;
+
+        init();*/
+        $('#myImg').click();
+    }
+    
+    /*$scope.importGT = function () {
+        // click the <input type = 'file'> by program
+        $('#myInput').click();
+    }*/
+    
+
+    $scope.fileNameChanged = function (event) {
+        console.log("select file");
+        var selectedFile = event.target.files[0];
+        var reader = new FileReader();
+
+        var imgtag = document.getElementById("myimage");
+        imgtag.title = selectedFile.name;
+
+        reader.onload = function (event) {
+//            imgtag.src = event.target.result;
+            document.getElementById("parzival").src = event.target.result;
+            init();
+        };
+
+        reader.readAsDataURL(selectedFile);
     }
 });
 
 myApp.config(function ($compileProvider) {
     $compileProvider.aHrefSanitizationWhitelist(/^\s*(|blob|):/);
 });
+
+//function onFileSelected(event) {
+//    var selectedFile = event.target.files[0];
+//    var reader = new FileReader();
+//
+//    var imgtag = document.getElementById("myimage");
+//    imgtag.title = selectedFile.name;
+//
+//    reader.onload = function (event) {
+//        imgtag.src = event.target.result;
+//    };
+//
+//    reader.readAsDataURL(selectedFile);
+//}
