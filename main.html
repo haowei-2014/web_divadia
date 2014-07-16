@@ -16,33 +16,64 @@
 
     <!-- Optional theme -->
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
-    
+
     <!-- Angularjs -->
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
-    <script src="simpleController.js"></script> 
+    <script src="simpleController.js"></script>
 </head>
 
 <body>
-<h2 align="center">DIVADIA web service</h2> 
-    
+    <h2 align="center">DIVADIA Web Interface</h2> 
+
     <div class="row" ng-controller="simpleController">
         <div class="col-sm-1"></div>
         <div class="col-sm-8">
             <div class="paperscript split">
                 <div class="canvas">
-                    <canvas height="800" width="1100" style="background:#e4e1e1; border:1px solid #0000FF;" id="canvas" ></canvas>
+                    <canvas height="800" width="1100" style="background:#e4e1e1; border:1px solid #0000FF;" id="canvas"></canvas>
                 </div>
             </div>
-            
+
             <img class="hidden" id="parzival" src="csg562-022.png" alt="The Scream">
-<!--            <img id="parzival" src="csg562-022.png" alt="The Scream">-->
+            <!--            <img id="parzival" src="csg562-022.png" alt="The Scream">-->
         </div>
-        <div class="col-sm-2">           
+        <div class="col-sm-2">
             <button type="button" class="btn btn-primary" ng-click="importImg()">Import Img</button>
             <input id="myImg" type="file" style="visibility:hidden" onchange="angular.element(this).scope().fileNameChanged(event)">
             <button type="button" class="btn btn-primary" ng-click="importGT()">Import GT</button>
             <button type="button" class="btn btn-primary" ng-click="exportGT()">Export GT</button>
-<!--            <a download="content.txt" ng-href="{{ url }}">download</a>-->
+            <!--            <a download="content.txt" ng-href="{{ url }}">download</a>-->
+            </form>
+            <br>
+            <br>
+            <form name="myMode">
+                <input type="radio" ng-model="mode" value="display"> Display
+                <br/>
+                <input type="radio" ng-model="mode" value="draw"> Draw
+                <br/>
+                <input type="radio" ng-model="mode" value="modify"> Modify
+                <br/>
+                <tt>color = {{mode}}</tt>
+            </form>
+            <br>
+            <br>
+            <form name="myDraw">
+                <input type="radio" ng-model="color" value="noColor"> Pan / zoom
+                <br/>
+                <input type="radio" ng-model="color" value="green"> Draw text line
+                <br/>
+                <input type="radio" ng-model="color" value="blue"> Draw text block
+                <br/>
+                <input type="radio" ng-model="color" value="magenta"> Draw decoration
+                <br/>
+                <input type="radio" ng-model="color" value="orange"> Draw comment
+                <br/>
+                <input type="radio" ng-model="color" value="white"> Draw page
+                <!--                <tt>color = {{color | json}}</tt>-->
+            </form>
+            <br>
+            <br>
+            <button type="button" class="btn btn-primary" ng-click="clickTest()">clickTest</button>
             <br>
             <br>
             <p>The pixel you are clicking is:</p>
@@ -55,10 +86,10 @@
                 </li>
             </ul>
 
-        <!--    <button type="button" class="btn btn-primary" ng-click="zoomin()">Zoom in</button>  -->
+            <!--    <button type="button" class="btn btn-primary" ng-click="zoomin()">Zoom in</button>  -->
             <input id="myInput" type="file" style="visibility:hidden" />
-        <!--    <input type="button" value="Show Dialog" onclick="$('#myInput').click();" /> -->
-            <img id="myimage" height="200">
+            <!--    <input type="button" value="Show Dialog" onclick="$('#myInput').click();" /> -->
+            <!--            <img id="myimage" height="200">-->
         </div>
         <div class="col-sm-1"></div>
     </div>
@@ -67,13 +98,13 @@
     <script type="text/javascript">
         
     </script> -->
-    
+
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-    
-    
+
+
 </body>
 
 </html>

@@ -3,9 +3,12 @@ var myApp = angular.module('myApp', []);
 myApp.controller('simpleController', function ($scope) {
     paper.install(window);
     init();
+    imgName = null;
 
     function init() {
         $scope.polygon = [];
+        $scope.color = 'noColor';
+        $scope.mode = 'display';
         canvas = document.getElementById('canvas');
         paper.setup(canvas);
         raster = new Raster('parzival');
@@ -13,19 +16,19 @@ myApp.controller('simpleController', function ($scope) {
         zoom = 0.2;
         project.activeLayer.scale(zoom);
         myPath = new Path();
-        myPath.strokeColor = 'red';
+        myPath.strokeColor = $scope.color;
         myPath.strokeWidth = 2;
         lastClick = 0;
-        pathFinished = false;
+        pathFinished = true;
         tool = new Tool();
-        //        initDim();
         img = document.getElementById("parzival");
         imgWidth = img.width;
         imgHeight = img.height;
-        alert(imgWidth + " , " + imgHeight);
+        xmlDoc = null;
+        //alert();
+        //       alert(imgWidth + " , " + imgHeight);
+
     }
-
-
 
 
 
@@ -39,19 +42,9 @@ myApp.controller('simpleController', function ($scope) {
     //        }
     //    }
 
-
     // get the position of the pixel which is being clicked.
     tool.onMouseUp = function (event) {
         //  alert(event.offsetX + "  " + event.offsetY);
-        // if the path is finished, then begin a new path
-        if (pathFinished) {
-            myPath = new Path();
-            myPath.strokeColor = 'red';
-            myPath.strokeWidth = 2;
-            $scope.polygon = [];
-            pathFinished = false;
-        }
-
         // test if the mousedown is single or double click.
         var single = true;
         var drag = false;
@@ -70,6 +63,15 @@ myApp.controller('simpleController', function ($scope) {
         }
         lastClick = t;
 
+        // if the path is finished, then begin a new path
+        if (!drag && pathFinished) {
+            myPath = new Path();
+            myPath.strokeColor = $scope.color;
+            myPath.strokeWidth = 2;
+            $scope.polygon = [];
+            pathFinished = false;
+        }
+
         // calculate the postion of the pixel respect to the top-left corner of the image.
         //           console.log(raster.bounds.x);
         //           console.log(event.clientX);
@@ -81,14 +83,13 @@ myApp.controller('simpleController', function ($scope) {
 
         var xClick = Math.round((event.point.x - raster.bounds.x) / zoom);
         var yClick = Math.round((event.point.y - raster.bounds.y) / zoom);
-
         var pElement = $("#xyClick");
         //var scope = $('#xyClick').scope();
 
         // update the point information of the polygon
         if (xClick < 0 || xClick >= imgWidth || yClick < 0 || yClick >= imgHeight) {
             pElement.html("Out of the image!");
-        } else if (!drag) {
+        } else if (!drag && single) {
             myPath.add(event.point);
             pElement.html("x: " + xClick + ", y: " + yClick);
             $scope.polygon.push({
@@ -101,14 +102,23 @@ myApp.controller('simpleController', function ($scope) {
         if (!single) {
             myPath.closed = true;
             pathFinished = true;
-            $scope.polygon.pop(); // remove the last element of the polygon, because it was added twice,
-            // due to the two mouseup.
+            if (xmlDoc == null)
+                initDom();
             updateDOM();
+
+            myPath.onClick = function (event) {
+                //      this.fillColor = 'red';
+                this.selected = true;
+                alert(this.segments);
+                alert(event.point);
+                
+                alert("path click here");
+            }
+
         }
         $scope.$apply();
     }
-
-
+    
     // pan the image 
     tool.onMouseDrag = function (event) {
         console.log('You dragged the mouse!');
@@ -123,19 +133,14 @@ myApp.controller('simpleController', function ($scope) {
     // have to move it back to the cursor. This is transformed by a little complicated coordinate 
     // transformation. See "Coordinate_transformation.pdf".
     canvas.addEventListener("mousewheel", function (e) {
-
         //   alert("mousewheel");
         e.preventDefault();
         var direction = e.deltaY;
         var scaleFactor = 1.5;
-
-
         var xPToImageLast = Math.round(e.offsetX - raster.bounds.x);
         var yPToImageLast = Math.round(e.offsetY - raster.bounds.y);
-
         var xPToImageNew;
         var yPToImageNew;
-
 
         if (direction < 0) {
             zoom = zoom * scaleFactor;
@@ -151,13 +156,39 @@ myApp.controller('simpleController', function ($scope) {
 
         var xPToCanvasNew = xPToImageNew + Math.round(raster.bounds.x);
         var yPToCanvasNew = yPToImageNew + Math.round(raster.bounds.y);
-
         var offsetXFromPToCursor = Math.round(e.offsetX - xPToCanvasNew);
         var offsetYFromPToCursor = Math.round(e.offsetY - yPToCanvasNew);
         //     raster.position += new Point(offsetXFromPToCursor, offsetYFromPToCursor);
         project.activeLayer.position = new Point(raster.position.x + offsetXFromPToCursor,
             raster.position.y + offsetYFromPToCursor);
     });
+
+
+    $scope.clickTest = function () {
+
+        alert("click test");
+        alert(project.layers);
+
+        var path = new Path();
+        path.strokeColor = 'black';
+        path.add(new Point(30, 75));
+        path.add(new Point(30, 25));
+        path.add(new Point(80, 25));
+        path.add(new Point(80, 75));
+        path.closed = true;
+        path.position = view.center;
+
+        // When the mouse is clicked on the item,
+        // set its fill color to red:
+//        path.onClick = function (event) {
+//            //      this.fillColor = 'red';
+//            this.selected = true;
+//            alert("path click");
+//        }
+
+    }
+
+
 
     function loadXMLDoc(filename) {
         if (window.XMLHttpRequest) {
@@ -249,6 +280,52 @@ myApp.controller('simpleController', function ($scope) {
         }
     }
 
+
+    function initDom() {
+        text = "<PcGts><Metadata>";
+        text = text + "<Creator>hao.wei@unifr.ch</Creator>";
+        text = text + "<Created>15.07.2014</Created>";
+        text = text + "<LastChange>16.07.2014</LastChange>";
+        text = text + "<Comment></Comment>";
+        text = text + "</Metadata>";
+        text = text + "<Page></Page>";
+        text = text + "</PcGts>";
+        xmlDoc = loadXMLString(text);
+
+        var d = new Date();
+        var created = xmlDoc.getElementsByTagName("Created")[0];
+        newCreated = xmlDoc.createTextNode(d);
+        created.appendChild(newCreated);
+        var lastChange = xmlDoc.getElementsByTagName("LastChange")[0];
+        newCreated = xmlDoc.createTextNode(d);
+        lastChange.appendChild(newCreated);
+
+        newAttImgName = xmlDoc.createAttribute("imageFilename");
+        newAttImgName.nodeValue = imgName;
+        newAttImgHgt = xmlDoc.createAttribute("imageHeight");
+        newAttImgHgt.nodeValue = imgHeight;
+        newAttImgWd = xmlDoc.createAttribute("imageWidth");
+        newAttImgWd.nodeValue = imgWidth;
+        var page = xmlDoc.getElementsByTagName("Page")[0];
+        page.setAttributeNode(newAttImgWd);
+        page.setAttributeNode(newAttImgHgt);
+        page.setAttributeNode(newAttImgName);
+
+        newAttId = xmlDoc.createAttribute("pcGtsId");
+        newAttId.nodeValue = "";
+        newAttLc = xmlDoc.createAttribute("xsi:schemaLocation");
+        newAttLc.nodeValue = "http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15 http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15/pagecontent.xsd";
+        newAttXMLNS = xmlDoc.createAttribute("xmlns:xsi");
+        newAttXMLNS.nodeValue = "http://www.w3.org/2001/XMLSchema-instance";
+        var pcGts = xmlDoc.getElementsByTagName("PcGts")[0];
+        pcGts.setAttributeNode(newAttXMLNS);
+        pcGts.setAttributeNode(newAttLc);
+        pcGts.setAttributeNode(newAttId);
+
+        //      alert((new XMLSerializer()).serializeToString(xmlDoc));
+    }
+
+
     function updateDOM() {
         var page = xmlDoc.getElementsByTagName("Page")[0];
         newCd = xmlDoc.createElement("Coords");
@@ -268,13 +345,29 @@ myApp.controller('simpleController', function ($scope) {
         newAttCus = xmlDoc.createAttribute("custom");
         newAttCus.nodeValue = "0";
         newAttID = xmlDoc.createAttribute("id");
-        newAttID.nodeValue = "123456789";
+        newAttID.nodeValue = myPath.id;
         newAttTp = xmlDoc.createAttribute("type");
-        newAttTp.nodeValue = "textline";
-        newTR.setAttributeNode(newAttCom);
-        newTR.setAttributeNode(newAttCus);
-        newTR.setAttributeNode(newAttID);
+        switch ($scope.color) {
+        case 'green':
+            newAttTp.nodeValue = 'textline';
+            break;
+        case "magenta":
+            newAttTp.nodeValue = 'decoration';
+            break;
+        case "orange":
+            newAttTp.nodeValue = 'comment';
+            break;
+        case "blue":
+            newAttTp.nodeValue = 'text';
+            break;
+        case "white":
+            newAttTp.nodeValue = 'page';
+            break;
+        }
         newTR.setAttributeNode(newAttTp);
+        newTR.setAttributeNode(newAttID);
+        newTR.setAttributeNode(newAttCus);
+        newTR.setAttributeNode(newAttCom);
         newTR.appendChild(newCd);
         page.appendChild(newTR);
     }
@@ -307,42 +400,22 @@ myApp.controller('simpleController', function ($scope) {
     }
 
     $scope.importImg = function () {
-        /*alert("change image");
-        document.getElementById("parzival").src = "276_original.png";
-        var ni = new Image();
-        ni.onload = function () {
-            imgWidthTmp = ni.width;
-            imgHeightTmp = ni.height;
-            alert(imgWidthTmp);
-            imgWidth = imgWidthTmp;
-            imgHeight = imgHeightTmp;
-        }
-        ni.src = document.getElementById("parzival").src;
-
-        init();*/
         $('#myImg').click();
     }
-    
-    /*$scope.importGT = function () {
-        // click the <input type = 'file'> by program
-        $('#myInput').click();
-    }*/
-    
 
+    // load new image. Reference to test3.html, or check email "useful posts.."
     $scope.fileNameChanged = function (event) {
         console.log("select file");
         var selectedFile = event.target.files[0];
         var reader = new FileReader();
-
-        var imgtag = document.getElementById("myimage");
-        imgtag.title = selectedFile.name;
-
+        //    var imgtag = document.getElementById("myimage");
+        //    imgtag.title = selectedFile.name;
         reader.onload = function (event) {
-//            imgtag.src = event.target.result;
+            //    imgtag.src = event.target.result;
             document.getElementById("parzival").src = event.target.result;
+            imgName = selectedFile.name;
             init();
         };
-
         reader.readAsDataURL(selectedFile);
     }
 });
@@ -350,17 +423,3 @@ myApp.controller('simpleController', function ($scope) {
 myApp.config(function ($compileProvider) {
     $compileProvider.aHrefSanitizationWhitelist(/^\s*(|blob|):/);
 });
-
-//function onFileSelected(event) {
-//    var selectedFile = event.target.files[0];
-//    var reader = new FileReader();
-//
-//    var imgtag = document.getElementById("myimage");
-//    imgtag.title = selectedFile.name;
-//
-//    reader.onload = function (event) {
-//        imgtag.src = event.target.result;
-//    };
-//
-//    reader.readAsDataURL(selectedFile);
-//}
