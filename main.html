@@ -17,6 +17,11 @@
     <!-- Optional theme -->
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
 
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
     <!-- Angularjs -->
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
     <script src="simpleController.js"></script>
@@ -47,28 +52,28 @@
             <br>
             <br>
             <form name="myMode">
-                <input type="radio" ng-model="mode" value="display"> Display
+                <input type="radio" ng-model="mode" value="display">Display
                 <br/>
-                <input type="radio" ng-model="mode" value="draw"> Draw
+                <input type="radio" ng-model="mode" value="draw">Draw
                 <br/>
-                <input type="radio" ng-model="mode" value="modify"> Modify
+                <input type="radio" ng-model="mode" value="modify">Modify
                 <br/>
                 <tt>color = {{mode}}</tt>
             </form>
             <br>
             <br>
             <form name="myDraw">
-                <input type="radio" ng-model="color" value="noColor"> Pan / zoom
+                <input type="radio" ng-model="color" value="noColor">Pan / zoom
                 <br/>
-                <input type="radio" ng-model="color" value="green"> Draw text line
+                <input type="radio" ng-model="color" value="green">Draw text line
                 <br/>
-                <input type="radio" ng-model="color" value="blue"> Draw text block
+                <input type="radio" ng-model="color" value="blue">Draw text block
                 <br/>
-                <input type="radio" ng-model="color" value="magenta"> Draw decoration
+                <input type="radio" ng-model="color" value="magenta">Draw decoration
                 <br/>
-                <input type="radio" ng-model="color" value="orange"> Draw comment
+                <input type="radio" ng-model="color" value="orange">Draw comment
                 <br/>
-                <input type="radio" ng-model="color" value="white"> Draw page
+                <input type="radio" ng-model="color" value="white">Draw page
                 <!--                <tt>color = {{color | json}}</tt>-->
             </form>
             <br>
@@ -90,21 +95,15 @@
             <input id="myInput" type="file" style="visibility:hidden" />
             <!--    <input type="button" value="Show Dialog" onclick="$('#myInput').click();" /> -->
             <!--            <img id="myimage" height="200">-->
+            <br>
+            <br>
+            <br>
+            <p>Mouse position:</p>
+            <textarea id='mousePos' ng-model="mousePos"></textarea>
+            <br>
+            <br>
+            <div class="col-sm-1"></div>
         </div>
-        <div class="col-sm-1"></div>
-    </div>
-
-    <!-- controller 
-    <script type="text/javascript">
-        
-    </script> -->
-
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-
-
 </body>
 
 </html>

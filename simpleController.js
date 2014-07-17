@@ -9,6 +9,7 @@ myApp.controller('simpleController', function ($scope) {
         $scope.polygon = [];
         $scope.color = 'noColor';
         $scope.mode = 'display';
+        //     $scope.mousePos = '111111111111';
         canvas = document.getElementById('canvas');
         paper.setup(canvas);
         raster = new Raster('parzival');
@@ -25,6 +26,12 @@ myApp.controller('simpleController', function ($scope) {
         imgWidth = img.width;
         imgHeight = img.height;
         xmlDoc = null;
+
+        currentModify = null;
+        currentModifyPts = [];
+        currentModifyPt = null;
+        currentModifyPtCircle = null;
+        currentModifyPtIndex = 0;
         //alert();
         //       alert(imgWidth + " , " + imgHeight);
 
@@ -44,6 +51,25 @@ myApp.controller('simpleController', function ($scope) {
 
     // get the position of the pixel which is being clicked.
     tool.onMouseUp = function (event) {
+        switch ($scope.mode) {
+        case "display":
+            display();
+            break;
+        case "draw":
+            draw(event);
+            break;
+        case "modify":
+            modify(event);
+            break;
+        }
+    }
+
+    function display() {}
+
+    function modify(event) {}
+
+
+    function draw(event) {
         //  alert(event.offsetX + "  " + event.offsetY);
         // test if the mousedown is single or double click.
         var single = true;
@@ -109,30 +135,115 @@ myApp.controller('simpleController', function ($scope) {
             myPath.onClick = function (event) {
                 //      this.fillColor = 'red';
                 this.selected = true;
-                alert(this.segments);
-                alert(event.point);
-                
+                //       alert(this.segments);
+                //       alert(event.point);
                 alert("path click here");
+                if ($scope.mode == 'modify') {
+                    currentModify = this;
+                    var currentModifyPtsLength = currentModify.segments.length;
+                    if (currentModifyPts.length != 0)
+                        currentModifyPts = [];
+                    for (var i = 0; i < currentModifyPtsLength; i++) {
+                        currentModifyPts.push(currentModify.segments[i].point);
+                    }
+                    //                    alert(currentModifyPts);
+                }
+
             }
 
         }
         $scope.$apply();
     }
-    
+
+
+
     // pan the image 
     tool.onMouseDrag = function (event) {
-        console.log('You dragged the mouse!');
-        var vector = event.delta;
-        console.log(vector);
-        project.activeLayer.position = new Point(project.activeLayer.position.x + vector.x,
-            project.activeLayer.position.y + vector.y);
+
+        if (currentModifyPtCircle != null)
+            currentModifyPtCircle.remove();
+        if ((currentModifyPt != null) &&
+            (lineDistance(event.downPoint, currentModifyPt) <= 10)) {
+
+            /*var pathTest = new Path();
+            pathTest.strokeColor = 'black';
+            pathTest.add(new Point(currentModifyPt.x, currentModifyPt.y));
+            pathTest.add(new Point(event.point.x, event.point.y));
+            console.log("pathTest");*/
+            console.log(event.downPoint);
+            console.log(currentModifyPt);
+
+            currentModify.segments[currentModifyPtIndex].point = event.point;
+
+
+        } else {
+            //    console.log('You dragged the mouse!');
+            var vector = event.delta;
+            //    console.log(vector);
+            project.activeLayer.position = new Point(project.activeLayer.position.x + vector.x,
+                project.activeLayer.position.y + vector.y);
+        }
+    }
+
+
+    tool.onMouseMove = function (event) {
+        //     console.log(event.point);
+        $scope.mousePos = 'x: ' + Math.round(event.point.x) + ', y: ' + Math.round(event.point.y);
+        $scope.$apply();
+
+
+
+        /*if (currentModifyPt != null)
+            currentModifyPt.remove();*/
+
+        if ($scope.mode == 'modify') {
+            if (currentModify != null) {
+                for (var i = 0; i < currentModifyPts.length; i++) {
+
+                    if (lineDistance(event.point, currentModifyPts[i]) < 30) {
+                        console.log("enough");
+
+                        currentModifyPtCircle = new Path.Circle({
+                            center: [currentModifyPts[i].x, currentModifyPts[i].y],
+                            radius: 10
+                        });
+
+                        currentModifyPtCircle.strokeColor = '#ff0000';
+                        currentModifyPtCircle.fillColor = 'blue';
+
+                        currentModifyPtCircle.removeOnMove();
+                        currentModifyPt = new Point(currentModifyPts[i].x, currentModifyPts[i].y);
+                        currentModifyPtIndex = i;
+
+
+                    }
+                }
+            }
+        }
+    }
+
+    function lineDistance(point1, point2) {
+        var xs = 0;
+        var ys = 0;
+
+        xs = point2.x - point1.x;
+        xs = xs * xs;
+
+        ys = point2.y - point1.y;
+        ys = ys * ys;
+
+        return Math.sqrt(xs + ys);
     }
 
 
     // This method is to zoom in/out. After zooming, the pixel under the cursor will move away, so we 
     // have to move it back to the cursor. This is transformed by a little complicated coordinate 
     // transformation. See "Coordinate_transformation.pdf".
-    canvas.addEventListener("mousewheel", function (e) {
+    /*canvas.addEventListener("mousewheel", function (e) {
+
+//        if (currentModifyPt != null)
+//            currentModifyPt.remove();
+
         //   alert("mousewheel");
         e.preventDefault();
         var direction = e.deltaY;
@@ -161,30 +272,43 @@ myApp.controller('simpleController', function ($scope) {
         //     raster.position += new Point(offsetXFromPToCursor, offsetYFromPToCursor);
         project.activeLayer.position = new Point(raster.position.x + offsetXFromPToCursor,
             raster.position.y + offsetYFromPToCursor);
-    });
+    });*/
 
+    $('#canvas').bind('mousewheel DOMMouseScroll MozMousePixelScroll', function (e) {
+        var delta = 0;
+        var scaleFactor = 1.5;
+        e.preventDefault();
+        if (e.type == 'mousewheel') { //this is for chrome/IE
+            delta = e.originalEvent.wheelDelta;
+        } else if (e.type == 'DOMMouseScroll') { //this is for FireFox
+            delta = e.originalEvent.detail * -1; //FireFox reverses the scroll so we force to to re - reverse...
+        }
+        if (delta > 0) { //scroll up
+            zoom = zoom / scaleFactor;
+            project.activeLayer.scale(1 / scaleFactor);
+           // alert("zoom out");
+        } else if (delta < 0) { //scroll down
+            zoom = zoom * scaleFactor;
+            project.activeLayer.scale(scaleFactor);
+           // alert("zoom in");
+        }
+            
+    });
+        
+        
 
     $scope.clickTest = function () {
 
         alert("click test");
-        alert(project.layers);
 
-        var path = new Path();
-        path.strokeColor = 'black';
-        path.add(new Point(30, 75));
-        path.add(new Point(30, 25));
-        path.add(new Point(80, 25));
-        path.add(new Point(80, 75));
-        path.closed = true;
-        path.position = view.center;
+        var firstPath = new Path.Circle();
 
-        // When the mouse is clicked on the item,
-        // set its fill color to red:
-//        path.onClick = function (event) {
-//            //      this.fillColor = 'red';
-//            this.selected = true;
-//            alert("path click");
-//        }
+        firstPath.position = new Point();
+        first.radius = 35;
+
+
+        firstPath.strokeColor = '#ff0000';
+        firstPath.fillColor = 'blue';
 
     }
 
