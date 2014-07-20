@@ -25,6 +25,7 @@
     <!-- Angularjs -->
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
     <script src="simpleController.js"></script>
+
 </head>
 
 <body>
@@ -52,29 +53,44 @@
             <br>
             <br>
             <form name="myMode">
-                <input type="radio" ng-model="mode" value="display">Display
+                <input type="radio" ng-model="mode" value="draw" ng-change="modeChange()">Draw
                 <br/>
-                <input type="radio" ng-model="mode" value="draw">Draw
+                <input type="radio" ng-model="mode" value="modify" ng-change="modeChange()">Modify
                 <br/>
-                <input type="radio" ng-model="mode" value="modify">Modify
+                <input type="radio" ng-model="mode" value="display" ng-change="modeChange()">Display
                 <br/>
-                <tt>color = {{mode}}</tt>
             </form>
             <br>
             <br>
-            <form name="myDraw">
-                <input type="radio" ng-model="color" value="noColor">Pan / zoom
+            <form id="drawForm">
+                <input type="radio" ng-model="color" value="green">Text line
                 <br/>
-                <input type="radio" ng-model="color" value="green">Draw text line
+                <input type="radio" ng-model="color" value="blue">Text block
                 <br/>
-                <input type="radio" ng-model="color" value="blue">Draw text block
+                <input type="radio" ng-model="color" value="magenta">Decoration
                 <br/>
-                <input type="radio" ng-model="color" value="magenta">Draw decoration
+                <input type="radio" ng-model="color" value="orange">Comment
                 <br/>
-                <input type="radio" ng-model="color" value="orange">Draw comment
-                <br/>
-                <input type="radio" ng-model="color" value="white">Draw page
+                <input type="radio" ng-model="color" value="white">Page
                 <!--                <tt>color = {{color | json}}</tt>-->
+            </form>
+            <form id="modifyForm" style="display:none">
+                <input type="checkbox" ng-model="displayText" ng-change="displayChange()">Text block
+                <br/>
+                <input type="checkbox" ng-model="displayTextLine" ng-change="displayChange()">Text line
+                <br/>
+                <input type="checkbox" ng-model="displayDecoration" ng-change="displayChange()">Decoration
+            </form>
+            <form id="displayForm" style="display:none">
+                <input type="checkbox" ng-model="displayText" ng-change="displayChange()">Text block
+                <br/>
+                <input type="checkbox" ng-model="displayTextLine" ng-change="displayChange()">Text line
+                <br/>
+                <input type="checkbox" ng-model="displayDecoration" ng-change="displayChange()">Decoration
+                <br/>
+                <input type="checkbox" ng-model="displayComment" ng-change="displayChange()">Comment
+                <br/>
+                <input type="checkbox" ng-model="displayPage" ng-change="displayChange()">Page
             </form>
             <br>
             <br>
@@ -96,10 +112,12 @@
             <!--    <input type="button" value="Show Dialog" onclick="$('#myInput').click();" /> -->
             <!--            <img id="myimage" height="200">-->
             <br>
+            <p>Comment:</p>
+            <textarea ng-model="comment"></textarea>{{comment}}
             <br>
             <br>
             <p>Mouse position:</p>
-            <textarea id='mousePos' ng-model="mousePos"></textarea>
+            <p id='mousePosition'></p>
             <br>
             <br>
             <div class="col-sm-1"></div>
