@@ -7,19 +7,22 @@ myApp.controller('simpleController', function ($scope) {
         imgName = null;
 
         function init() {
-            $scope.polygon = [];
-            $scope.color = 'green';
-            $scope.mode = 'draw';
-            $scope.displayText = true;
-            $scope.displayTextLine = true;
-            $scope.displayDecoration = true;
-            $scope.displayComment = true;
-            $scope.displayPage = true;
             paper.setup('canvas');
             raster = new Raster('parzival');
             raster.position = view.center;
             zoom = 0.2;
             project.activeLayer.scale(zoom);
+            $scope.polygon = [];
+            $scope.mode = 'draw';
+            $scope.mode2 = 'draw2';
+            $scope.mode3 = 'draw3';
+            $scope.mode4 = 'draw4';
+            $scope.color = 'green';
+            $scope.displayText = true;
+            $scope.displayTextLine = true;
+            $scope.displayDecoration = true;
+            $scope.displayComment = true;
+            $scope.displayPage = true;
             myPath = new Path();
             myPath.strokeColor = $scope.color;
             myPath.strokeWidth = 2;
@@ -33,7 +36,7 @@ myApp.controller('simpleController', function ($scope) {
             imgWidth = img.width;
             imgHeight = img.height;
             xmlDoc = null;
-            mousePosition = $("#mousePosition");
+            mousePosition = document.getElementById("mousePosition");
 
             currentModify = null;
             currentModifyPts = [];
@@ -45,12 +48,14 @@ myApp.controller('simpleController', function ($scope) {
                 currentModifyPt: null,
                 currentModifyPtIndex: 0
             };
-            //alert();
-            //       alert(imgWidth + " , " + imgHeight);
 
+            colorText = new Color(0, 0, 1);
+            colorTextLine = new Color(0, 0.5019607843137255, 0);
+            colorDecoration = new Color(1, 0, 1);
+            colorComment = new Color(1, 0.6470588235294118, 0);
+            colorPage = new Color(1, 1, 1);
+            //    alert($scope.mode);
         }
-
-
 
         //    view.onFrame = function (event) {
         //        if (imgChanged) {
@@ -64,6 +69,24 @@ myApp.controller('simpleController', function ($scope) {
 
         // get the position of the pixel which is being clicked.
         tool.onMouseUp = function (event) {
+            //  alert(event.offsetX + "  " + event.offsetY);
+            // test if the mousedown is single click, double click, or drag
+            single = true;
+            drag = false;
+            var d = new Date();
+            var t = d.getTime();
+            if (event.delta.length == 0)
+                drag = false;
+            else
+                drag = true;
+            if (t - lastClick < 200) {
+                console.log("double")
+                single = false;
+            } else {
+                console.log("single");
+            }
+            lastClick = t;
+
             switch ($scope.mode) {
             case "display":
                 display();
@@ -79,29 +102,38 @@ myApp.controller('simpleController', function ($scope) {
 
         function display() {}
 
-        function modify(event) {}
+        function modify(event) {
+            if (single && !drag && ($scope.mode == "modify")) {
+                var selectedCandidates = [];
+                var layerChildren = project.activeLayer.children;
+                for (var i = 0; i < layerChildren.length; i++) {
+                    if ((layerChildren[i].className == "Path") && layerChildren[i].contains(event.point)) {
+                        selectedCandidates.push(layerChildren[i]);
+                    }
+                }
+                if (selectedCandidates.length == 1) {
+                    updateCurrentPolygonInfo(selectedCandidates[0]);
+                } else if (selectedCandidates.length == 2) {
+                    for (var i = 0; i < selectedCandidates.length; i++) {
+
+                        if (!selectedCandidates[i].strokeColor.equals(colorPage)) {
+                            updateCurrentPolygonInfo(selectedCandidates[i]);
+                        }
+                    }
+                } else {
+                    for (var i = 0; i < selectedCandidates.length; i++) {
+                        if (selectedCandidates[i].strokeColor.equals(colorTextLine)) {
+                            updateCurrentPolygonInfo(selectedCandidates[i]);
+                        }
+
+                    }
+                }
+            }
+
+        }
 
 
         function draw(event) {
-            //  alert(event.offsetX + "  " + event.offsetY);
-            // test if the mousedown is single or double click.
-            var single = true;
-            var drag = false;
-            var d = new Date();
-            var t = d.getTime();
-            if (event.delta.length == 0)
-                drag = false;
-            else
-                drag = true;
-            if (t - lastClick < 200) {
-                console.log("double")
-                single = false;
-
-            } else {
-                console.log("single");
-            }
-            lastClick = t;
-
             // if the path is finished, then begin a new path
             if (!drag && pathFinished) {
                 myPath = new Path();
@@ -144,20 +176,23 @@ myApp.controller('simpleController', function ($scope) {
                 if (xmlDoc == null)
                     initDom();
                 updateDOM();
-
-                myPath.onClick = function (event) {
-                    updateCurrentPolygonInfo(this);
-                }
-                //                myPath.onMouseLeave = function (event) {
-                //                this.selected = false;
-                //                    console.log("mouse leave");
+                //                myPath.onClick = function (event) {
+                //                    updateCurrentPolygonInfo(this);
                 //                }
+                //myPath.onMouseLeave = function (event) {}              
             }
             $scope.$apply();
         }
 
         function updateCurrentPolygonInfo(pathSelected) {
+            if (currentModify != null) {
+                currentModify.fullySelected = false;
+                currentModify.fillColor = null;
+                currentModify.opacity = 1;
+            }
             pathSelected.fullySelected = true;
+            pathSelected.fillColor = 'red';
+            pathSelected.opacity = 0.1;
             console.log(pathSelected);
             if ($scope.mode == 'modify') {
                 currentModify = pathSelected;
@@ -173,7 +208,7 @@ myApp.controller('simpleController', function ($scope) {
 
         // if you use the modify mode and insert a point, do it and update the current polygon information 
         tool.onMouseDown = function (event) {
-            if (($scope.mode == 'modify') && (currentModifyInfo.type == "insert")) {
+            if (($scope.mode == 'modify') && (currentModifyInfo.type == "insert") && (currentModifyPt != null)) {
                 currentModify.insert(currentModifyInfo.currentModifyPtIndex + 1, event.point);
                 updateCurrentPolygonInfo(currentModify);
             }
@@ -184,12 +219,13 @@ myApp.controller('simpleController', function ($scope) {
             if (currentModifyPtCircle != null)
                 currentModifyPtCircle.remove();
             // if modify point exists, check its type and the modify it.
-            if (currentModifyInfo.currentModifyPt != null) {
+            if (currentModifyPt != null) {
                 if (currentModifyInfo.type == "modify") {
                     currentModify.segments[currentModifyInfo.currentModifyPtIndex].point = event.point;
                 } else {
                     currentModify.segments[currentModifyInfo.currentModifyPtIndex + 1].point = event.point;
                 }
+                updateDOMModify();
             } else { // pan the image
                 var vector = event.delta;
                 project.activeLayer.position = new Point(project.activeLayer.position.x + vector.x,
@@ -198,63 +234,89 @@ myApp.controller('simpleController', function ($scope) {
         }
 
 
-        tool.onMouseMove = function (event) {         
-            mousePosition.html("x: " + Math.round(event.point.x) + ", y: " + Math.round(event.point.y));
+        // update the DOM after modifying the polygon
+        function updateDOMModify() {
+            $scope.polygon = [];
+            for (var i = 0; i < currentModify.segments.length; i++) {
+                var xcoordinateImage = Math.round((currentModify.segments[i].point.x - raster.bounds.x) / zoom);
+                var ycoordinateImage = Math.round((currentModify.segments[i].point.y - raster.bounds.y) / zoom);
+                //      console.log(xcoordinateImage);
+                //      console.log(ycoordinateImage);
+                if (xcoordinateImage < 0 || xcoordinateImage >= imgWidth || ycoordinateImage < 0 || ycoordinateImage >= imgHeight) {
+                    $("#xyClick").html("Out of the image!");
+                } else {
+                    $scope.polygon.push({
+                        x: xcoordinateImage,
+                        y: ycoordinateImage,
+                    });
+                }
+            }
+            myPath = currentModify;
+            updateDOM();
+            console.log("currentModify.segments: " + currentModify.segments);
+            console.log($scope.polygon);
+        }
+
+
+        tool.onMouseMove = function (event) {
+            //   mousePosition.innerHTML("x: " + Math.round(event.point.x) + ", y: " + Math.round(event.point.y));
 
             // there are two types of modification: modify the existing corners of the polygon,
             // or insert a point within the existing boundary. Both are to be done with drag.
             if ($scope.mode == 'modify') {
-                if (currentModify != null) {
-                    currentModifyPt = null;
-                    // check the corners of the polygon, to see if any one is close enough to the cursor
-                    for (var i = 0; i < currentModifyPts.length; i++) {
-                        if (lineDistance(event.point, currentModifyPts[i]) < 20) {
-                            console.log("enough");
-                            currentModifyPtCircle = new Path.Circle({
-                                center: [currentModifyPts[i].x, currentModifyPts[i].y],
-                                radius: 10
-                            });
-                            currentModifyPtCircle.strokeColor = '#ff0000';
-                            currentModifyPtCircle.fillColor = 'blue';
-                            currentModifyPtCircle.removeOnMove();
-                            currentModifyInfo.currentModifyPtIndex = i;
-                            currentModifyPt = new Point(currentModifyPts[i].x, currentModifyPts[i].y);
-                            currentModifyInfo.currentModifyPt = currentModifyPt;
-                            currentModifyInfo.type = "modify";
-                        }
-                    }
-                    // if no corner of the polygon is selected, check if the cursor is close enough to any boundary
-                    if (currentModifyPt == null) {
-                        var distanceTmp = 100000;
-                        var perpendicularInfo = null;
-                        for (var i = 0; i < currentModifyPts.length; i++) {
-                            if (i < currentModifyPts.length - 1)
-                                perpendicularInfoTmp = pointLineDistance(currentModifyPts[i], currentModifyPts[i + 1],
-                                    event.point);
-                            else
-                                perpendicularInfoTmp = pointLineDistance(currentModifyPts[i], currentModifyPts[0],
-                                    event.point);
-                            // find the closest boundary to the cursor
-                            if ((perpendicularInfoTmp != null) && (perpendicularInfoTmp.distance < distanceTmp)) {
-                                perpendicularInfo = perpendicularInfoTmp;
-                                distanceTmp = perpendicularInfoTmp.distance;
-                                currentModifyInfo.currentModifyPtIndex = i;
-                            }
-                        }
-                        if ((perpendicularInfo != null) && (perpendicularInfo.distance < 10)) {
-                            currentModifyPtCircle = new Path.Circle({
-                                center: [perpendicularInfo.x, perpendicularInfo.y],
-                                radius: 10
-                            });
-                            currentModifyPtCircle.strokeColor = '#ff0000';
-                            currentModifyPtCircle.fillColor = 'blue';
-                            currentModifyPtCircle.removeOnMove();
-                            currentModifyInfo.currentModifyPt = new Point(perpendicularInfo.x, perpendicularInfo.y);
-                            currentModifyInfo.type = "insert";
-                        }
+                //      if (currentModify != null) {
+                currentModifyPt = null;
+                // check the corners of the polygon, to see if any one is close enough to the cursor
+                for (var i = 0; i < currentModifyPts.length; i++) {
+                    if (lineDistance(event.point, currentModifyPts[i]) < 20) {
+                        //   console.log("enough");
+                        currentModifyPtCircle = new Path.Circle({
+                            center: [currentModifyPts[i].x, currentModifyPts[i].y],
+                            radius: 3
+                        });
+                        currentModifyPtCircle.strokeColor = '#ff0000';
+                        currentModifyPtCircle.fillColor = 'blue';
+                        currentModifyPtCircle.removeOnMove();
+                        currentModifyInfo.currentModifyPtIndex = i;
+                        currentModifyPt = new Point(currentModifyPts[i].x, currentModifyPts[i].y);
+                        currentModifyInfo.currentModifyPt = currentModifyPt;
+                        currentModifyInfo.type = "modify";
                     }
                 }
+                // if no corner of the polygon is selected, check if the cursor is close enough to any boundary
+                if (currentModifyPt == null) {
+                    var distanceTmp = 100000;
+                    var perpendicularInfo = null;
+                    for (var i = 0; i < currentModifyPts.length; i++) {
+                        if (i < currentModifyPts.length - 1)
+                            perpendicularInfoTmp = pointLineDistance(currentModifyPts[i], currentModifyPts[i + 1],
+                                event.point);
+                        else
+                            perpendicularInfoTmp = pointLineDistance(currentModifyPts[i], currentModifyPts[0],
+                                event.point);
+                        // find the closest boundary to the cursor
+                        if ((perpendicularInfoTmp != null) && (perpendicularInfoTmp.distance < distanceTmp)) {
+                            perpendicularInfo = perpendicularInfoTmp;
+                            distanceTmp = perpendicularInfoTmp.distance;
+                            currentModifyInfo.currentModifyPtIndex = i;
+                        }
+                    }
+                    if ((perpendicularInfo != null) && (perpendicularInfo.distance < 10)) {
+                        currentModifyPtCircle = new Path.Circle({
+                            center: [perpendicularInfo.x, perpendicularInfo.y],
+                            radius: 3
+                        });
+                        currentModifyPtCircle.strokeColor = '#ff0000';
+                        currentModifyPtCircle.fillColor = 'blue';
+                        currentModifyPtCircle.removeOnMove();
+                        currentModifyPt = new Point(perpendicularInfo.x, perpendicularInfo.y);
+                        currentModifyInfo.currentModifyPt = currentModifyPt;
+                        currentModifyInfo.type = "insert";
+                    }
+                }
+                //       }
             }
+            //        console.log(currentModifyPt);
         }
 
 
@@ -412,8 +474,33 @@ myApp.controller('simpleController', function ($scope) {
 
             alert("click test");
 
-            console.log(project.activeLayer.children);
+            var layerChildren = project.activeLayer.children;
+            for (var i = 0; i < layerChildren.length; i++) {
+                if (layerChildren[i].className == "Path") {
+                    if (layerChildren[i].data.idXML)
+                        console.log(layerChildren[i].data.idXML);
+                    else {
+                        console.log("not exist");
+                        console.log(layerChildren[i]);
+                    }
+                }
+            }
         }
+
+
+        $scope.removePolygon = function () {      
+            var page = xmlDoc.getElementsByTagName("Page")[0];
+            var textRegions = page.childNodes;
+            for (var i = 0; i < textRegions.length; i++) {
+                var idXML = textRegions[i].getAttribute("id");
+                var idXMLPath = currentModify.data.idXML;
+                if ((idXML == idXMLPath) || (idXML == myPath.id)) {
+                    page.removeChild(textRegions[i]);
+                }
+            }
+            currentModify.remove();
+        }
+
 
         $scope.modeChange = function () {
             if ($scope.mode == 'draw') {
@@ -437,31 +524,31 @@ myApp.controller('simpleController', function ($scope) {
             var layerChildren = project.activeLayer.children;
             for (var i = 0; i < layerChildren.length; i++) {
                 if (layerChildren[i].className == "Path") {
-                    if (layerChildren[i].strokeColor.equals(new Color(0, 0.5019607843137255, 0))) {
+                    if (layerChildren[i].strokeColor.equals(colorTextLine)) {
                         if ($scope.displayTextLine)
                             layerChildren[i].visible = true;
                         else
                             layerChildren[i].visible = false;
                     }
-                    if (layerChildren[i].strokeColor.equals(new Color(0, 0, 1))) {
+                    if (layerChildren[i].strokeColor.equals(colorText)) {
                         if ($scope.displayText)
                             layerChildren[i].visible = true;
                         else
                             layerChildren[i].visible = false;
                     }
-                    if (layerChildren[i].strokeColor.equals(new Color(1, 0, 1))) {
+                    if (layerChildren[i].strokeColor.equals(colorDecoration)) {
                         if ($scope.displayDecoration)
                             layerChildren[i].visible = true;
                         else
                             layerChildren[i].visible = false;
                     }
-                    if (layerChildren[i].strokeColor.equals(new Color(1, 0.6470588235294118, 0))) {
+                    if (layerChildren[i].strokeColor.equals(colorComment)) {
                         if ($scope.displayComment)
                             layerChildren[i].visible = true;
                         else
                             layerChildren[i].visible = false;
                     }
-                    if (layerChildren[i].strokeColor.equals(new Color(1, 1, 1))) {
+                    if (layerChildren[i].strokeColor.equals(colorPage)) {
                         if ($scope.displayPage)
                             layerChildren[i].visible = true;
                         else
@@ -528,7 +615,7 @@ myApp.controller('simpleController', function ($scope) {
 
             for (i = 0; i < textRegions.length; i++) {
                 myPath = new Path();
-                myPath.strokeWidth = 1;
+                myPath.strokeWidth = 2;
                 var points = textRegions[i].childNodes[0].childNodes;
 
                 // assign color to different classes
@@ -559,7 +646,11 @@ myApp.controller('simpleController', function ($scope) {
                     y = y * zoom + raster.bounds.y;
                     myPath.add(new Point(x, y));
                 }
+                myPath.data.idXML = textRegions[i].getAttribute("id");
                 myPath.closed = true;
+                //                myPath.onClick = function (event) {
+                //                    updateCurrentPolygonInfo(this);
+                //                }
             }
         }
 
@@ -611,8 +702,18 @@ myApp.controller('simpleController', function ($scope) {
 
         function updateDOM() {
             var page = xmlDoc.getElementsByTagName("Page")[0];
+            var textRegions = page.childNodes;
+            for (var i = 0; i < textRegions.length; i++) {
+                var idXML = textRegions[i].getAttribute("id");
+                var idXMLPath = myPath.data.idXML;
+                if ((idXML == idXMLPath) || (idXML == myPath.id)) {
+                    console.log("equal! Remove it!");
+                    page.removeChild(textRegions[i]);
+                }
+            }
+
             newCd = xmlDoc.createElement("Coords");
-            for (i = 0; i < $scope.polygon.length; i++) {
+            for (var i = 0; i < $scope.polygon.length; i++) {
                 newPt = xmlDoc.createElement("Point");
                 newY = xmlDoc.createAttribute("y");
                 newY.nodeValue = $scope.polygon[i].y;
@@ -628,25 +729,21 @@ myApp.controller('simpleController', function ($scope) {
             newAttCus = xmlDoc.createAttribute("custom");
             newAttCus.nodeValue = "0";
             newAttID = xmlDoc.createAttribute("id");
-            newAttID.nodeValue = myPath.id;
+            if (myPath.data.idXML)
+                newAttID.nodeValue = myPath.data.idXML;
+            else
+                newAttID.nodeValue = myPath.id;
             newAttTp = xmlDoc.createAttribute("type");
-            switch ($scope.color) {
-            case 'green':
+            if (myPath.strokeColor.equals(colorTextLine))
                 newAttTp.nodeValue = 'textline';
-                break;
-            case "magenta":
-                newAttTp.nodeValue = 'decoration';
-                break;
-            case "orange":
-                newAttTp.nodeValue = 'comment';
-                break;
-            case "blue":
+            if (myPath.strokeColor.equals(colorText))
                 newAttTp.nodeValue = 'text';
-                break;
-            case "white":
+            if (myPath.strokeColor.equals(colorDecoration))
+                newAttTp.nodeValue = 'decoration';
+            if (myPath.strokeColor.equals(colorComment))
+                newAttTp.nodeValue = 'comment';
+            if (myPath.strokeColor.equals(colorPage))
                 newAttTp.nodeValue = 'page';
-                break;
-            }
             newTR.setAttributeNode(newAttTp);
             newTR.setAttributeNode(newAttID);
             newTR.setAttributeNode(newAttCus);

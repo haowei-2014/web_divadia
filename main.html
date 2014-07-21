@@ -25,7 +25,7 @@
     <!-- Angularjs -->
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
     <script src="simpleController.js"></script>
-
+    <script src="utilities.js"></script>
 </head>
 
 <body>
@@ -49,7 +49,6 @@
             <button type="button" class="btn btn-primary" ng-click="importGT()">Import GT</button>
             <button type="button" class="btn btn-primary" ng-click="exportGT()">Export GT</button>
             <!--            <a download="content.txt" ng-href="{{ url }}">download</a>-->
-            </form>
             <br>
             <br>
             <form name="myMode">
@@ -75,11 +74,10 @@
                 <!--                <tt>color = {{color | json}}</tt>-->
             </form>
             <form id="modifyForm" style="display:none">
-                <input type="checkbox" ng-model="displayText" ng-change="displayChange()">Text block
+                <button type="button" class="btn btn-primary" ng-click="removePolygon()">Remove</button>
                 <br/>
-                <input type="checkbox" ng-model="displayTextLine" ng-change="displayChange()">Text line
-                <br/>
-                <input type="checkbox" ng-model="displayDecoration" ng-change="displayChange()">Decoration
+
+                
             </form>
             <form id="displayForm" style="display:none">
                 <input type="checkbox" ng-model="displayText" ng-change="displayChange()">Text block
@@ -122,6 +120,7 @@
             <br>
             <div class="col-sm-1"></div>
         </div>
+    </div>
 </body>
 
 </html>
