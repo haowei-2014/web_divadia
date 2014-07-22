@@ -16,6 +16,7 @@
 
     <!-- Optional theme -->
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" type="text/css" href="mystyle.css">
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
@@ -24,8 +25,8 @@
 
     <!-- Angularjs -->
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
+<!--    <script src="utilities.js"></script>-->
     <script src="simpleController.js"></script>
-    <script src="utilities.js"></script>
 </head>
 
 <body>
@@ -36,7 +37,7 @@
         <div class="col-sm-8">
             <div class="paperscript split">
                 <div class="canvas">
-                    <canvas height="800" width="1100" style="background:#e4e1e1; border:1px solid #0000FF;" id="canvas"></canvas>
+                    <canvas height="800" width="1200" style="background:#e4e1e1; border:1px solid #0000FF;" id="canvas"></canvas>
                 </div>
             </div>
 
@@ -45,55 +46,112 @@
         </div>
         <div class="col-sm-2">
             <button type="button" class="btn btn-primary" ng-click="importImg()">Import Img</button>
-            <input id="myImg" type="file" style="visibility:hidden" onchange="angular.element(this).scope().fileNameChanged(event)">
+            <input id="myImg" type="file" style="display:none" onchange="angular.element(this).scope().fileNameChanged(event)">
             <button type="button" class="btn btn-primary" ng-click="importGT()">Import GT</button>
             <button type="button" class="btn btn-primary" ng-click="exportGT()">Export GT</button>
             <!--            <a download="content.txt" ng-href="{{ url }}">download</a>-->
             <br>
             <br>
-            <form name="myMode">
+            <p style="font-size: 20px;">Pleae select a working mode:</p>
+            <label class="radio-inline">
                 <input type="radio" ng-model="mode" value="draw" ng-change="modeChange()">Draw
-                <br/>
+            </label>
+            <label class="radio-inline">
                 <input type="radio" ng-model="mode" value="modify" ng-change="modeChange()">Modify
-                <br/>
+            </label>
+            <label class="radio-inline">
                 <input type="radio" ng-model="mode" value="display" ng-change="modeChange()">Display
-                <br/>
-            </form>
+            </label>
             <br>
             <br>
             <form id="drawForm">
-                <input type="radio" ng-model="color" value="green">Text line
-                <br/>
-                <input type="radio" ng-model="color" value="blue">Text block
-                <br/>
-                <input type="radio" ng-model="color" value="magenta">Decoration
-                <br/>
-                <input type="radio" ng-model="color" value="orange">Comment
-                <br/>
-                <input type="radio" ng-model="color" value="white">Page
-                <!--                <tt>color = {{color | json}}</tt>-->
+                <div class="radio">
+                    <label>
+                        <input type="radio" ng-model="color" value="green">Text line
+                    </label>
+                </div>
+                <div class="radio">
+                    <label>
+                        <input type="radio" ng-model="color" value="blue">Text block
+                    </label>
+                </div>
+                <div class="radio">
+                    <label>
+                        <input type="radio" ng-model="color" value="magenta">Decoration
+                    </label>
+                </div>
+                <div class="radio">
+                    <label>
+                        <input type="radio" ng-model="color" value="orange">Comment
+                    </label>
+                </div>
+                <div class="radio">
+                    <label>
+                        <input type="radio" ng-model="color" value="white">Page
+                    </label>
+                </div>
             </form>
             <form id="modifyForm" style="display:none">
                 <button type="button" class="btn btn-primary" ng-click="removePolygon()">Remove</button>
                 <br/>
-
-                
+                <br/>
+                <br/>
+                <br/>
+                <br/>
             </form>
+<!--            <form id="displayForm" style="display:none">
+                <input type="checkbox" class="center" ng-model="displayText" ng-change="displayChange()">Text block
+                <br/>
+                <input type="checkbox" class="center" ng-model="displayTextLine" ng-change="displayChange()">Text line
+                <br/>
+                <input type="checkbox" class="center" ng-model="displayDecoration" ng-change="displayChange()">Decoration
+                <br/>
+                <input type="checkbox" class="center" ng-model="displayComment" ng-change="displayChange()">Comment
+                <br/>
+                <input type="checkbox" class="center" ng-model="displayPage" ng-change="displayChange()">Page
+            </form>-->
             <form id="displayForm" style="display:none">
-                <input type="checkbox" ng-model="displayText" ng-change="displayChange()">Text block
-                <br/>
-                <input type="checkbox" ng-model="displayTextLine" ng-change="displayChange()">Text line
-                <br/>
-                <input type="checkbox" ng-model="displayDecoration" ng-change="displayChange()">Decoration
-                <br/>
-                <input type="checkbox" ng-model="displayComment" ng-change="displayChange()">Comment
-                <br/>
-                <input type="checkbox" ng-model="displayPage" ng-change="displayChange()">Page
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="displayText" ng-change="displayChange()">Text line
+                    </label>
+                </div>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="displayTextLine" ng-change="displayChange()">Text block
+                    </label>
+                </div>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="displayDecoration" ng-change="displayChange()">Decoration
+                    </label>
+                </div>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="displayComment" ng-change="displayChange()">Comment
+                    </label>
+                </div>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="displayPage" ng-change="displayChange()">Page
+                    </label>
+                </div>
             </form>
+            <!--    <button type="button" class="btn btn-primary" ng-click="zoomin()">Zoom in</button>  -->
+            <input id="myInput" type="file" style="visibility:hidden; display:none" />
+            <!--    <input type="button" value="Show Dialog" onclick="$('#myInput').click();" /> -->
+            <br>
+            <p>Comment:</p>
+            <textarea class="form-control" ng-model="comment" ng-change="editComment()"></textarea>
+            <br>
+            <p>ID:</p>
+            <p id='id'></p>
+            <br>
+            <p>Mouse position:</p>
+            <p id='mousePosition'></p>
             <br>
             <br>
             <button type="button" class="btn btn-primary" ng-click="clickTest()">clickTest</button>
-            <br>
             <br>
             <p>The pixel you are clicking is:</p>
             <p id='xyClick'></p>
@@ -104,22 +162,8 @@
                     x = {{xy.x}}, y = {{xy.y}}
                 </li>
             </ul>
-
-            <!--    <button type="button" class="btn btn-primary" ng-click="zoomin()">Zoom in</button>  -->
-            <input id="myInput" type="file" style="visibility:hidden" />
-            <!--    <input type="button" value="Show Dialog" onclick="$('#myInput').click();" /> -->
-            <!--            <img id="myimage" height="200">-->
-            <br>
-            <p>Comment:</p>
-            <textarea ng-model="comment"></textarea>{{comment}}
-            <br>
-            <br>
-            <p>Mouse position:</p>
-            <p id='mousePosition'></p>
-            <br>
-            <br>
-            <div class="col-sm-1"></div>
         </div>
+        <div class="col-sm-1"></div>
     </div>
 </body>
 

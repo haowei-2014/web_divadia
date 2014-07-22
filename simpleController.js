@@ -23,9 +23,10 @@ myApp.controller('simpleController', function ($scope) {
             $scope.displayDecoration = true;
             $scope.displayComment = true;
             $scope.displayPage = true;
-            myPath = new Path();
-            myPath.strokeColor = $scope.color;
-            myPath.strokeWidth = 2;
+            $scope.$apply();
+            currentDrawPath = new Path();
+            currentDrawPath.strokeColor = $scope.color;
+            currentDrawPath.strokeWidth = 2;
             lastClick = 0;
             pathFinished = true;
             tool = new Tool();
@@ -36,7 +37,7 @@ myApp.controller('simpleController', function ($scope) {
             imgWidth = img.width;
             imgHeight = img.height;
             xmlDoc = null;
-            mousePosition = document.getElementById("mousePosition");
+            mousePosition = $("#mousePosition");
 
             currentModify = null;
             currentModifyPts = [];
@@ -77,8 +78,10 @@ myApp.controller('simpleController', function ($scope) {
             var t = d.getTime();
             if (event.delta.length == 0)
                 drag = false;
-            else
+            else{
                 drag = true;
+                document.getElementById("canvas").style.cursor="initial";
+            }
             if (t - lastClick < 200) {
                 console.log("double")
                 single = false;
@@ -89,21 +92,20 @@ myApp.controller('simpleController', function ($scope) {
 
             switch ($scope.mode) {
             case "display":
-                display();
+                modifyOrDisplay(event);
                 break;
             case "draw":
                 draw(event);
                 break;
             case "modify":
-                modify(event);
+                modifyOrDisplay(event);
                 break;
             }
         }
 
-        function display() {}
 
-        function modify(event) {
-            if (single && !drag && ($scope.mode == "modify")) {
+        function modifyOrDisplay(event) {
+            if (single && !drag && (($scope.mode == "modify") || ($scope.mode == "display"))) {
                 var selectedCandidates = [];
                 var layerChildren = project.activeLayer.children;
                 for (var i = 0; i < layerChildren.length; i++) {
@@ -125,20 +127,18 @@ myApp.controller('simpleController', function ($scope) {
                         if (selectedCandidates[i].strokeColor.equals(colorTextLine)) {
                             updateCurrentPolygonInfo(selectedCandidates[i]);
                         }
-
                     }
                 }
             }
-
         }
 
 
         function draw(event) {
             // if the path is finished, then begin a new path
             if (!drag && pathFinished) {
-                myPath = new Path();
-                myPath.strokeColor = $scope.color;
-                myPath.strokeWidth = 2;
+                currentDrawPath = new Path();
+                currentDrawPath.strokeColor = $scope.color;
+                currentDrawPath.strokeWidth = 2;
                 $scope.polygon = [];
                 pathFinished = false;
             }
@@ -161,7 +161,7 @@ myApp.controller('simpleController', function ($scope) {
             if (xClick < 0 || xClick >= imgWidth || yClick < 0 || yClick >= imgHeight) {
                 pElement.html("Out of the image!");
             } else if (!drag && single) {
-                myPath.add(event.point);
+                currentDrawPath.add(event.point);
                 pElement.html("x: " + xClick + ", y: " + yClick);
                 $scope.polygon.push({
                     x: xClick,
@@ -171,15 +171,15 @@ myApp.controller('simpleController', function ($scope) {
 
             // if double click, then the path is finished.
             if (!single) {
-                myPath.closed = true;
+                currentDrawPath.closed = true;
                 pathFinished = true;
                 if (xmlDoc == null)
                     initDom();
-                updateDOM();
-                //                myPath.onClick = function (event) {
+                updateDOMDraw();
+                //                currentDrawPath.onClick = function (event) {
                 //                    updateCurrentPolygonInfo(this);
                 //                }
-                //myPath.onMouseLeave = function (event) {}              
+                //currentDrawPath.onMouseLeave = function (event) {}              
             }
             $scope.$apply();
         }
@@ -193,9 +193,8 @@ myApp.controller('simpleController', function ($scope) {
             pathSelected.fullySelected = true;
             pathSelected.fillColor = 'red';
             pathSelected.opacity = 0.1;
-            console.log(pathSelected);
+            currentModify = pathSelected;
             if ($scope.mode == 'modify') {
-                currentModify = pathSelected;
                 var currentModifyPtsLength = currentModify.segments.length;
                 if (currentModifyPts.length != 0)
                     currentModifyPts = [];
@@ -203,6 +202,9 @@ myApp.controller('simpleController', function ($scope) {
                     currentModifyPts.push(currentModify.segments[i].point);
                 }
             }
+            $scope.comments = currentModify.data.comments;
+            $scope.$apply();
+            $("#id").html(currentModify.id);
         }
 
 
@@ -219,7 +221,7 @@ myApp.controller('simpleController', function ($scope) {
             if (currentModifyPtCircle != null)
                 currentModifyPtCircle.remove();
             // if modify point exists, check its type and the modify it.
-            if (currentModifyPt != null) {
+            if (($scope.mode == 'modify') && (currentModifyPt != null)) {
                 if (currentModifyInfo.type == "modify") {
                     currentModify.segments[currentModifyInfo.currentModifyPtIndex].point = event.point;
                 } else {
@@ -227,6 +229,7 @@ myApp.controller('simpleController', function ($scope) {
                 }
                 updateDOMModify();
             } else { // pan the image
+                document.getElementById("canvas").style.cursor="all-scroll";
                 var vector = event.delta;
                 project.activeLayer.position = new Point(project.activeLayer.position.x + vector.x,
                     project.activeLayer.position.y + vector.y);
@@ -251,15 +254,45 @@ myApp.controller('simpleController', function ($scope) {
                     });
                 }
             }
-            myPath = currentModify;
-            updateDOM();
-            console.log("currentModify.segments: " + currentModify.segments);
-            console.log($scope.polygon);
+  //          currentDrawPath = currentModify;
+ //           console.log($scope.polygon);
+
+            var page = xmlDoc.getElementsByTagName("Page")[0];
+            var textRegions = page.childNodes;
+            var currentTextRegion;
+
+            if (currentModify.data.idXML) {
+                for (var i = 0; i < textRegions.length; i++) {
+                    var idXML = textRegions[i].getAttribute("id");
+                    var idPathData = currentModify.data.idXML;
+                    if (idXML == idPathData) {
+                        currentTextRegion = textRegions[i];
+                        currentTextRegion.removeChild(currentTextRegion.childNodes[0]);
+                    }
+                }
+            } else {
+                for (var i = 0; i < textRegions.length; i++) {
+                    var idXML = textRegions[i].getAttribute("id");
+                    var idPath = currentModify.id;
+                    if (idXML == idPath) {
+                        currentTextRegion = textRegions[i];
+                        currentTextRegion.removeChild(currentTextRegion.childNodes[0]);
+                    }
+                }
+            }
+            newCoords = xmlDoc.createElement("Coords");
+            for (var i = 0; i < $scope.polygon.length; i++) {
+                newPt = xmlDoc.createElement("Point");
+                newPt.setAttribute("y", $scope.polygon[i].y);
+                newPt.setAttribute("x", $scope.polygon[i].x);
+                newCoords.appendChild(newPt);
+            }           
+            currentTextRegion.appendChild(newCoords);
         }
 
 
         tool.onMouseMove = function (event) {
-            //   mousePosition.innerHTML("x: " + Math.round(event.point.x) + ", y: " + Math.round(event.point.y));
+            mousePosition.html("x: " + Math.round(event.point.x) + ", y: " + Math.round(event.point.y));
 
             // there are two types of modification: modify the existing corners of the polygon,
             // or insert a point within the existing boundary. Both are to be done with drag.
@@ -474,27 +507,17 @@ myApp.controller('simpleController', function ($scope) {
 
             alert("click test");
 
-            var layerChildren = project.activeLayer.children;
-            for (var i = 0; i < layerChildren.length; i++) {
-                if (layerChildren[i].className == "Path") {
-                    if (layerChildren[i].data.idXML)
-                        console.log(layerChildren[i].data.idXML);
-                    else {
-                        console.log("not exist");
-                        console.log(layerChildren[i]);
-                    }
-                }
-            }
+            
         }
 
 
-        $scope.removePolygon = function () {      
+        $scope.removePolygon = function () {
             var page = xmlDoc.getElementsByTagName("Page")[0];
             var textRegions = page.childNodes;
             for (var i = 0; i < textRegions.length; i++) {
                 var idXML = textRegions[i].getAttribute("id");
                 var idXMLPath = currentModify.data.idXML;
-                if ((idXML == idXMLPath) || (idXML == myPath.id)) {
+                if ((idXML == idXMLPath) || (idXML == currentDrawPath.id)) {
                     page.removeChild(textRegions[i]);
                 }
             }
@@ -560,6 +583,26 @@ myApp.controller('simpleController', function ($scope) {
         }
 
 
+        $scope.editComments = function () {
+            console.log($scope.comments);
+
+            var page = xmlDoc.getElementsByTagName("Page")[0];
+            var textRegions = page.childNodes;
+            var idXMLPath;
+            for (var i = 0; i < textRegions.length; i++) {
+                var idXML = textRegions[i].getAttribute("id");
+                if ($scope.mode == "draw")
+                    idXMLPath = currentDrawPath.data.idXML;
+                else
+                    idXMLPath = currentModify.data.idXML;
+                if ((idXML == idXMLPath) || (idXML == currentDrawPath.id)) {
+                    console.log("Found it!");
+                    textRegions[i].setAttribute("comments", $scope.comments);
+                }
+            }
+        }
+
+
         function loadXMLDoc(filename) {
             if (window.XMLHttpRequest) {
                 xhttp = new XMLHttpRequest();
@@ -609,31 +652,31 @@ myApp.controller('simpleController', function ($scope) {
         function drawGT(x) {
             xmlDoc = loadXMLString(x);
 
-            var myPath;
+            var currentDrawPath;
             var page = xmlDoc.getElementsByTagName("Page")[0];
             var textRegions = page.childNodes;
 
             for (i = 0; i < textRegions.length; i++) {
-                myPath = new Path();
-                myPath.strokeWidth = 2;
+                currentDrawPath = new Path();
+                currentDrawPath.strokeWidth = 2;
                 var points = textRegions[i].childNodes[0].childNodes;
 
                 // assign color to different classes
                 switch (textRegions[i].getAttribute("type")) {
                 case "textline":
-                    myPath.strokeColor = 'green';
+                    currentDrawPath.strokeColor = 'green';
                     break;
                 case "decoration":
-                    myPath.strokeColor = 'magenta';
+                    currentDrawPath.strokeColor = 'magenta';
                     break;
                 case "comment":
-                    myPath.strokeColor = 'orange';
+                    currentDrawPath.strokeColor = 'orange';
                     break;
                 case "text":
-                    myPath.strokeColor = 'blue';
+                    currentDrawPath.strokeColor = 'blue';
                     break;
                 case "page":
-                    myPath.strokeColor = 'white';
+                    currentDrawPath.strokeColor = 'white';
                     break;
                 }
 
@@ -644,13 +687,11 @@ myApp.controller('simpleController', function ($scope) {
                     // transform the coordinate to display it
                     x = x * zoom + raster.bounds.x;
                     y = y * zoom + raster.bounds.y;
-                    myPath.add(new Point(x, y));
+                    currentDrawPath.add(new Point(x, y));
                 }
-                myPath.data.idXML = textRegions[i].getAttribute("id");
-                myPath.closed = true;
-                //                myPath.onClick = function (event) {
-                //                    updateCurrentPolygonInfo(this);
-                //                }
+                currentDrawPath.data.idXML = textRegions[i].getAttribute("id");
+                currentDrawPath.data.comments = textRegions[i].getAttribute("comments");
+                currentDrawPath.closed = true;
             }
         }
 
@@ -665,95 +706,61 @@ myApp.controller('simpleController', function ($scope) {
             text = text + "<Page></Page>";
             text = text + "</PcGts>";
             xmlDoc = loadXMLString(text);
-
+            
+            var pcGts = xmlDoc.getElementsByTagName("PcGts")[0];
+            pcGts.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+            pcGts.setAttribute("xsi:schemaLocation", "http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15 http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15/pagecontent.xsd");
+            pcGts.setAttribute("pcGtsId", "");
+            
             var d = new Date();
             var created = xmlDoc.getElementsByTagName("Created")[0];
-            newCreated = xmlDoc.createTextNode(d);
-            created.appendChild(newCreated);
-            var lastChange = xmlDoc.getElementsByTagName("LastChange")[0];
-            newCreated = xmlDoc.createTextNode(d);
-            lastChange.appendChild(newCreated);
-
-            newAttImgName = xmlDoc.createAttribute("imageFilename");
-            newAttImgName.nodeValue = imgName;
-            newAttImgHgt = xmlDoc.createAttribute("imageHeight");
-            newAttImgHgt.nodeValue = imgHeight;
-            newAttImgWd = xmlDoc.createAttribute("imageWidth");
-            newAttImgWd.nodeValue = imgWidth;
+            created.childNodes[0].nodeValue=d; 
+            
             var page = xmlDoc.getElementsByTagName("Page")[0];
-            page.setAttributeNode(newAttImgWd);
-            page.setAttributeNode(newAttImgHgt);
-            page.setAttributeNode(newAttImgName);
-
-            newAttId = xmlDoc.createAttribute("pcGtsId");
-            newAttId.nodeValue = "";
-            newAttLc = xmlDoc.createAttribute("xsi:schemaLocation");
-            newAttLc.nodeValue = "http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15 http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15/pagecontent.xsd";
-            newAttXMLNS = xmlDoc.createAttribute("xmlns:xsi");
-            newAttXMLNS.nodeValue = "http://www.w3.org/2001/XMLSchema-instance";
-            var pcGts = xmlDoc.getElementsByTagName("PcGts")[0];
-            pcGts.setAttributeNode(newAttXMLNS);
-            pcGts.setAttributeNode(newAttLc);
-            pcGts.setAttributeNode(newAttId);
-
-            //      alert((new XMLSerializer()).serializeToString(xmlDoc));
+            page.setAttribute("imageWidth", imgWidth);
+            page.setAttribute("imageHeight", imgHeight);
+            page.setAttribute("imageFilename", imgName);
         }
 
 
-        function updateDOM() {
+        function updateDOMDraw() {
             var page = xmlDoc.getElementsByTagName("Page")[0];
-            var textRegions = page.childNodes;
-            for (var i = 0; i < textRegions.length; i++) {
-                var idXML = textRegions[i].getAttribute("id");
-                var idXMLPath = myPath.data.idXML;
-                if ((idXML == idXMLPath) || (idXML == myPath.id)) {
-                    console.log("equal! Remove it!");
-                    page.removeChild(textRegions[i]);
-                }
-            }
-
             newCd = xmlDoc.createElement("Coords");
-            for (var i = 0; i < $scope.polygon.length; i++) {
+            for (var i = 0; i < $scope.polygon.length; i++) {   
                 newPt = xmlDoc.createElement("Point");
-                newY = xmlDoc.createAttribute("y");
-                newY.nodeValue = $scope.polygon[i].y;
-                newX = xmlDoc.createAttribute("x");
-                newX.nodeValue = $scope.polygon[i].x;
-                newPt.setAttributeNode(newY);
-                newPt.setAttributeNode(newX);
+                newPt.setAttribute("y", $scope.polygon[i].y);
+                newPt.setAttribute("x", $scope.polygon[i].x);
                 newCd.appendChild(newPt);
             }
             newTR = xmlDoc.createElement("TextRegion");
-            newAttCom = xmlDoc.createAttribute("comments");
-            newAttCom.nodeValue = "";
-            newAttCus = xmlDoc.createAttribute("custom");
-            newAttCus.nodeValue = "0";
-            newAttID = xmlDoc.createAttribute("id");
-            if (myPath.data.idXML)
-                newAttID.nodeValue = myPath.data.idXML;
-            else
-                newAttID.nodeValue = myPath.id;
-            newAttTp = xmlDoc.createAttribute("type");
-            if (myPath.strokeColor.equals(colorTextLine))
-                newAttTp.nodeValue = 'textline';
-            if (myPath.strokeColor.equals(colorText))
-                newAttTp.nodeValue = 'text';
-            if (myPath.strokeColor.equals(colorDecoration))
-                newAttTp.nodeValue = 'decoration';
-            if (myPath.strokeColor.equals(colorComment))
-                newAttTp.nodeValue = 'comment';
-            if (myPath.strokeColor.equals(colorPage))
-                newAttTp.nodeValue = 'page';
-            newTR.setAttributeNode(newAttTp);
-            newTR.setAttributeNode(newAttID);
-            newTR.setAttributeNode(newAttCus);
-            newTR.setAttributeNode(newAttCom);
+            newTR.setAttribute("comments", "");
+            newTR.setAttribute("custom", "0");
+            newTR.setAttribute("id", currentDrawPath.id);
+            if (currentDrawPath.strokeColor.equals(colorTextLine))
+                newTR.setAttribute("type", "textline");
+            if (currentDrawPath.strokeColor.equals(colorText))
+                newTR.setAttribute("type", "text");
+            if (currentDrawPath.strokeColor.equals(colorDecoration))
+                newTR.setAttribute("type", "decoration");
+            if (currentDrawPath.strokeColor.equals(colorComment))
+                newTR.setAttribute("type", "comment");
+            if (currentDrawPath.strokeColor.equals(colorPage))
+                newTR.setAttribute("type", "page");
+            newTR.setAttribute("id", currentDrawPath.id);       
             newTR.appendChild(newCd);
             page.appendChild(newTR);
         }
 
+        
+        function editLastChange() {
+            var d = new Date();
+            var lastChange = xmlDoc.getElementsByTagName("LastChange")[0];     
+            lastChange.childNodes[0].nodeValue=d; 
+        }
+        
 
         $scope.exportGT = function () {
+            editLastChange();
             var textToWrite = (new XMLSerializer()).serializeToString(xmlDoc);
             alert(textToWrite);
             var textFileAsBlob = new Blob([textToWrite], {
@@ -802,6 +809,6 @@ myApp.controller('simpleController', function ($scope) {
 
 });
 
-myApp.config(function ($compileProvider) {
+/*myApp.config(function ($compileProvider) {
     $compileProvider.aHrefSanitizationWhitelist(/^\s*(|blob|):/);
-});
+});*/
