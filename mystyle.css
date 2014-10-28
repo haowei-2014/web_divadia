@@ -1,0 +1,27 @@
+.btnTop {
+    margin: 2px;
+    margin-bottom: 5px;
+    width: 90px !important;
+}
+
+#autoSegment {
+    white-space: normal;
+    width: 120px;
+}
+
+/*
+#scroll {
+    width: 1250px;
+    height: 850px;
+    overflow: scroll;
+    border: solid 1px white;
+    background-color: white;
+}
+*/
+
+/*
+#canvas {
+    background:#e4e1e1; 
+    border:1px solid #0000FF;
+}
+*/

@@ -1,199 +1,185 @@
 <!DOCTYPE html>
-<html ng-app>
+<html ng-app="myApp">
 
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Divadia web interface</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Divadia web interface</title>
 
-    <!--   <link rel="stylesheet" href="css/docs.css" />-->
-    <!-- Load the Paper.js library -->
-    <script type="text/javascript" src="js/paper.js"></script>
+<!--   <link rel="stylesheet" href="css/docs.css" />-->
 
-    <!-- Bootstrap -->
-    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
 
-    <!-- Optional theme -->
-    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+<!-- Bootstrap -->
+<!--    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">-->
+<link rel="stylesheet" href="bootstrap/dist/css/bootstrap.min.css">
+
+<!-- Optional theme -->
+<!--    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">-->
+<link rel="stylesheet" href="bootstrap/dist/css/bootstrap-theme.min.css">
+<link rel="stylesheet" type="text/css" href="mystyle.css">
+
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<!--    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>-->
+<script src="jquery/js/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="bootstrap/dist/js/bootstrap.min.js"></script>
+
+<!-- Load the Paper.js library -->
+<script type="text/javascript" src="paperjs-v0.9.20/dist/paper-full.js"></script>
+
+<!-- Angularjs -->
+<!--    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>-->
+<script src="angularjs/angular.min.js"></script>
+<script src="utilities.js"></script>
+<script src="simpleController.js"></script>
 </head>
 
-<body>
+<body ng-controller="simpleController">
 
 
-    <div class="row" ng-controller="SimpleController">
-        <div class="col-sm-1">Margin</div>
-        <div class="col-sm-8">
-            <p>
-                We start with an example of a very simple tool that creates an empty path on execution and adds segments to it whenever you click the mouse:
-            </p>
-            <div class="paperscript split">
-                <div class="canvas">
-                    <canvas height="800" width="1000" style="background:#e4e1e1" id="canvas"></canvas>
-                </div>
-            </div>
-            <img class="hidden" id="parzival" src="006.png" alt="The Scream" width="50" height="50">
-        </div>
-        <div class="col-sm-2">
-            test:
-            <input type="text" ng-model="name" />{{name}}
-
-            <p>The pixel you are clicking is:</p>
-            <p id='xyClick'></p>
-
-            <br>
-            <br>
-            <br>
-            <p>The points in the current polygon are:</p>
-            <ul>
-                <li ng-repeat="xy in polygon">
-                    x = {{xy.x}}, y = {{xy.y}}
+      <div class="navbar navbar-default" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">File <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li data-toggle="modal" data-target="#myModal"><a href="">Open Image...</a>
+                        </li>
+                        <li><a href="#" ng-click="importGT()">Read GT...</a>
+                        </li>
+                        <li><a href="#" ng-click="exportGT()">Save GT...</a>
+                        </li>
+                        <li class="divider"></li>
+                        <li><a href="#">Exit</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Draw <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li id="drawTextLine" ng-click="drawTextLine()"><a href="#">Text line <span id="drawTextLineGlyph" class="glyphicon glyphicon-ok" style="float:right;"></span></a></li>
+                        <li id="drawTextBlock" ng-click="drawTextBlock()"><a href="#">Text block <span id="drawTextBlockGlyph" class="glyphicon glyphicon-ok hidden" style="float:right;"></span></a></li>
+                        <li id="drawDecoration" ng-click="drawDecoration()"><a href="#">Decoration <span id="drawDecorationGlyph" class="glyphicon glyphicon-ok hidden" style="float:right;"></span></a></li>
+                        <li id="drawComment" ng-click="drawComment()"><a href="#">Comment <span id="drawCommentGlyph" class="glyphicon glyphicon-ok hidden" style="float:right;"></span></a></li>
+                        <li id="drawPage" ng-click="drawPage()"><a href="#">Page <span id="drawPageGlyph" class="glyphicon glyphicon-ok hidden" style="float:right;"></span></a></li>
+                        <li class="divider"></li>
+                        <li id="drawPolygon" ng-click="drawPolygon()"><a href="#">Polygon <span id="drawPolygonGlyph" class="glyphicon glyphicon-ok" style="float:right;"></span></a></li>
+                        <li id="drawRectangle" ng-click="drawRectangle()"><a href="#">Rectangle <span id="drawRectangleGlyph" class="glyphicon glyphicon-ok hidden" style="float:right;"></span></a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Show <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li id="showTextLine" ng-click="showTextLine()"><a href="#">Text line <span id="showTextLineGlyph" class="glyphicon glyphicon-ok" style="float:right;"></span></a></li>
+                        <li id="showTextBlock" ng-click="showTextBlock()"><a href="#">Text block <span id="showTextBlockGlyph" class="glyphicon glyphicon-ok" style="float:right;"></span></a></li>
+                        <li id="showDecoration" ng-click="showDecoration()"><a href="#">Decoration <span id="showDecorationGlyph" class="glyphicon glyphicon-ok" style="float:right;"></span></a></li>
+                        <li id="showComment" ng-click="showComment()"><a href="#">Comment <span id="showCommentGlyph" class="glyphicon glyphicon-ok" style="float:right;"></span></a></li>
+                        <li id="showPage" ng-click="showPage()"><a href="#">Page <span id="showPageGlyph" class="glyphicon glyphicon-ok" style="float:right;"></span></a></li>
+                    </ul>
                 </li>
             </ul>
-
-            <button type="button" class="btn btn-primary" ng-click="zoomin()">Zoom in</button>
-
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="./">Default</a>
+                </li>
+                <li><a href="../navbar-static-top/">Static top</a>
+                </li>
+                <li><a href="../navbar-fixed-top/">Fixed top</a>
+                </li>
+            </ul>
         </div>
-        <div class="col-sm-1">Margin</div>
+        <!--/.nav-collapse -->
     </div>
+    <!--/.container-fluid -->
+</div>
 
 
+    Shape: <select ng-model="myShape"
+				ng-options="shape.name for shape in shapes"></select>
+    Region: <select ng-model="myRegion"
+				ng-options="region.name for region in regions"></select>
+    <button type="button" class="btn btn-primary btnTop" ng-click="importImg()">Import
+				Img </button>
+    <input id="myImg" type="file"
+				style="visibility: hidden; display: none" />
+			<button type="button" class="btn btn-primary btnTop" ng-click="importGT()">Import
+				GT</button>
+			<input id="myInput" type="file"
+				style="visibility: hidden; display: none" />
+			<button type="button" class="btn btn-primary btnTop" ng-click="exportGT()">Export
+				GT</button>
+			<button type="button" id="showInfoButton" class="btn btn-primary btnTop"
+				ng-click="showImgInfo()">Hide Info</button>
+			<button type="button" id="testButton" class="btn btn-primary btnTop" ng-click="test()">test</button>
+			<button id="autoSegment" type="button" class="btn btn-primary" >AutoSegment</button>
+			<button id="loadDatabase" type="button" class="btn btn-primary" >loadDatabase</button>
+            <button type="button" class="btn btn-primary"
+					ng-click="removePolygon()">Remove</button>
+			
+            <!--<span>Working mode:</span>
+			<label class="radio-inline"> <input type="radio"
+				ng-model="mode" value="draw" ng-change="modeChange()">Draw </label>
+            <label class="radio-inline"> <input type="radio"
+				ng-model="mode" value="modify" ng-change="modeChange()">Modify </label>
+            <label class="radio-inline"> <input type="radio"
+				ng-model="mode" value="display" ng-change="modeChange()">Display </label>-->
+    
+    <span id="autoSegmentComment" style="color:red;"></span>
+			<span>Comment:</span>
+			<textarea class="form-control" ng-model="comment"
+				ng-change="editComment()" style="visibility: hidden; display: none"></textarea>
 
-    <script type="text/paperscript" canvas="canvas">
-        // Create a raster item using the image tag with id='mona'
-   //     var raster = new Raster('parzival');
+    
+<!-- modal to choose an image.  -->
 
-         // Move the raster to the center of the view
-   //     raster.position = view.center;
-   //     raster.scale(0.2);
-
-         // Create a new path once, when the script is executed:
-        var path = new Path();
-         // Give the stroke a color
-        path.strokeColor = 'black';
-        var start = new Point(100, 100);
-         // Move to start and draw a line from there
-        path.moveTo(start);
-         // Note the plus operator on Point objects.
-         // PaperScript does that for us, and much more!
-        path.lineTo(start + [100, 150]);
-
-        var lastClick = 0;
-        var pathFinished = false;
-
-        var mypath = new Path.Circle({
-            center: view.center,
-            radius: 30,
-            strokeColor: 'black'
-        });
-
-        mypath.onClick = function (event) {
-            this.fillColor = 'red';
-        }
-
-        mypath.onDoubleClick = function (event) {
-            this.fillColor = 'green';
-        }
-
- /*       function onMouseDrag(event) {
-
-            console.log('You dragged the mouse!');
-            var vector = event.delta;
-            console.log(vector);
-            project.activeLayer.position = new Point(project.activeLayer.position.x + vector.x,
-                project.activeLayer.position.y + vector.y);
-
-
-        }
-
-*/
-
-
-
-
-        /*
-        function onMouseDown(event) {
-
-            // if the path is finished, then begin a new path
-            if (pathFinished) {
-                myPath = new Path();
-                myPath.strokeColor = 'red';
-                myPath.strokeWidth = 2;
-                $('#xyClick').scope().polygon = [];
-                pathFinished = false;
-            }
-
-            // test if the mousedown is single or double click.
-            var single = true;
-            var d = new Date();
-            var t = d.getTime();
-            if (t - lastClick < 200) {
-                console.log("double")
-                single = false;
-
-            } else {
-                console.log("single");
-            }
-            lastClick = t;
-
-            // calculate the postion of the pixel respect to the top-left corner of the image.
-            console.log(raster.bounds);
-            var xClick = Math.round(event.point.x - raster.bounds.x) * (1 / 0.2);
-            var yClick = Math.round(event.point.y - raster.bounds.y) * (1 / 0.2);
-
-            var pElement = $("#xyClick");
-            var scope = $('#xyClick').scope();
-
-            // update the point information of the polygon
-            if (xClick < 0 || xClick >= 2000 || yClick < 0 || yClick >= 3008) {
-                pElement.html("Out of the image!");
-            } else {
-                myPath.add(event.point);
-                pElement.html("x: " + xClick + ", y: " + yClick);
-                scope.polygon.push({
-                    x: xClick,
-                    y: yClick
-                });
-                scope.$apply();
-            }
-
-            // if double click, then the path is finished.
-            if (!single) {
-                myPath.closed = true;
-                pathFinished = true;
-            }
-        }*/
-    </script>
+<div class="modal fade" id="myModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title">Open an image</h4>
+      </div>
+      <div class="modal-body">
+        <p>Please type the URL of the image</p>
+        <input type="text" size="60" ng-model="imageURL"/> 
+        <br>
+        <br>
+        <p>Or browse from your local computer:</p>
+        <input id="myImage" type="file"/>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="openImage()">Okay</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
 
 
 
 
-    <!-- controller  -->
-    <script>
-        function SimpleController($scope) {
-            $scope.polygon = [];
+	<div class="row">
 
-            $scope.zoomin = function () {
-
-                var canvas = document.getElementById('canvas');
-
-
-
-                alert("zoom in!");
-            };
-        }
-    </script>
+			<!--<div class="paperscript split">
+                <div class="canvas">
+                    <canvas height="800" width="1200" style="background:#e4e1e1; border:1px solid #0000FF;" id="canvas"></canvas>
+                </div>
+            </div>-->
+			<!--                <div id="scroll">-->
+			<canvas height="850" width="1920"
+				style="background: #e4e1e1; border: 1px solid #0000FF;" id="canvas"></canvas>
+			<!--                </div>-->
+			<img class="hidden" id="parzival" src="csg562-022.png" alt="The Scream">
 
 
-
-
-
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-    <!-- Angularjs -->
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
+	</div>
+    <span id='imgName'></span>
+    <span id='imgHeight'></span>
+    <span id='imgWidth'></span>
+    <span>The pixel you are clicking is:</span>
+    <span id='xyClick'></span>
+    <span>Mouse position:</span>
+    <span id='mousePosition'></span>
 </body>
 
 </html>
